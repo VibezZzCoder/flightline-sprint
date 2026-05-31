@@ -8,7 +8,7 @@ Play it directly at vibezzzcoder.github.io/flightline-sprint/
 
 Open `flightline-sprint.html` directly in a browser. No install, build step, local server, CDN, package manager, or external runtime dependency is required.
 
-Play it directly at vibezzzcoder.github.io/flightline-sprint/
+Play it directly at https://vibezzzcoder.github.io/flightline-sprint/
 
 ## Controls
 
