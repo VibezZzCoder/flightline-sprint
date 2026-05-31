@@ -11,7 +11,7 @@
 <html lang="en">
 <head>
   <meta charset="utf-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
   <title>Red Light / Green Light: Flightline Sprint</title>
   <link rel="icon" href="data:,">
   <style>
@@ -83,6 +83,102 @@
       border: 0;
     }
 
+    /* -----------------------------------------------------------------------
+       Touch controls (mobile). Hidden by default; shown only when JS detects a
+       touch / coarse-pointer device and adds .has-touch to <html>. Anchored to
+       the viewport so they sit below the letterboxed game in portrait and
+       overlay the game bottom in landscape.
+    ----------------------------------------------------------------------- */
+    #touchControls {
+      display: none;
+      position: fixed;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      z-index: 10;
+      justify-content: space-between;
+      align-items: flex-end;
+      gap: 12px;
+      padding: 12px max(12px, env(safe-area-inset-right))
+               max(12px, env(safe-area-inset-bottom))
+               max(12px, env(safe-area-inset-left));
+      pointer-events: none;
+    }
+
+    html.has-touch #touchControls {
+      display: flex;
+    }
+
+    .hold-btn {
+      pointer-events: auto;
+      width: min(34vw, 200px);
+      height: min(22vh, 150px);
+      border: 1px solid rgba(63, 212, 111, 0.55);
+      border-radius: 18px;
+      background: var(--panel-bg);
+      color: var(--text);
+      font: 700 clamp(13px, 3.6vw, 18px)/1.15 system-ui, -apple-system, sans-serif;
+      letter-spacing: 0.06em;
+      text-transform: uppercase;
+      touch-action: none;
+      user-select: none;
+      -webkit-user-select: none;
+      -webkit-tap-highlight-color: transparent;
+      cursor: pointer;
+      box-shadow: 0 8px 28px rgba(0, 0, 0, 0.4);
+      transition: background-color 0.06s ease, transform 0.06s ease;
+    }
+
+    .hold-btn.is-active {
+      background: rgba(63, 212, 111, 0.32);
+      border-color: var(--green);
+      transform: scale(0.97);
+    }
+
+    #contextBtn {
+      pointer-events: auto;
+      flex: 0 0 auto;
+      align-self: center;
+      margin-bottom: min(8vh, 48px);
+      padding: 14px 28px;
+      border: 1px solid var(--green);
+      border-radius: 999px;
+      background: rgba(63, 212, 111, 0.92);
+      color: #08130b;
+      font: 800 clamp(15px, 4.4vw, 22px)/1 system-ui, -apple-system, sans-serif;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      touch-action: manipulation;
+      user-select: none;
+      -webkit-user-select: none;
+      -webkit-tap-highlight-color: transparent;
+      cursor: pointer;
+      box-shadow: 0 10px 30px rgba(0, 0, 0, 0.45);
+    }
+
+    /* Context button only makes sense when not actively playing. */
+    #touchControls[data-playing] #contextBtn {
+      visibility: hidden;
+    }
+
+    @media (orientation: landscape) {
+      .hold-btn {
+        width: min(26vw, 190px);
+        height: min(34vh, 140px);
+        opacity: 0.86;
+      }
+      #contextBtn {
+        margin-bottom: min(4vh, 24px);
+      }
+    }
+
+    @media (orientation: portrait) {
+      .hold-btn {
+        width: min(40vw, 210px);
+        height: min(20vh, 160px);
+      }
+    }
+
     @media (max-width: 760px) {
       body {
         padding: 8px;
@@ -99,6 +195,12 @@
     <canvas id="gameCanvas" width="1280" height="720"></canvas>
     <div id="screenReaderStatus" aria-live="polite"></div>
   </main>
+
+  <div id="touchControls" aria-hidden="true">
+    <button class="hold-btn" data-hold type="button" aria-label="Hold to move (left)">Hold ▶<br>Move</button>
+    <button id="contextBtn" type="button" aria-label="Start run">Start</button>
+    <button class="hold-btn" data-hold type="button" aria-label="Hold to move (right)">Hold ▶<br>Move</button>
+  </div>
 
   <script>
   'use strict';
@@ -306,6 +408,19 @@
         event.preventDefault();
       }
       this.keys.delete(event.code);
+    }
+
+    // Inject a virtual key from touch controls, mirroring onKeyDown so the rest
+    // of the game reads touch input through the exact same pipeline as the keyboard.
+    pressVirtual(code) {
+      if (!this.keys.has(code)) {
+        this.pressed.add(code);
+      }
+      this.keys.add(code);
+    }
+
+    releaseVirtual(code) {
+      this.keys.delete(code);
     }
 
     isDown(code) {
@@ -2029,6 +2144,108 @@
     const game = new Game(canvas, statusNode);
 
     window.__RLG_GAME__ = game;
+
+    /* -----------------------------------------------------------------------
+       Touch controls wiring. Isolated from gameplay logic: it only injects
+       virtual keys into the existing InputManager and reads game.state to
+       toggle the context button. No game logic is mutated here.
+    ----------------------------------------------------------------------- */
+    (function setupTouchControls() {
+      const root = document.getElementById('touchControls');
+      if (!root) return;
+
+      // Detection only gates *visibility*; the handlers below always attach so
+      // hybrid touch+mouse devices work and the controls stay testable. Mouse
+      // input generates pointer events too, so this is safe on desktop (the
+      // controls remain display:none there and never receive events).
+      const isTouch = (window.matchMedia && window.matchMedia('(pointer: coarse)').matches)
+        || ('ontouchstart' in window)
+        || (navigator.maxTouchPoints > 0);
+      if (isTouch) {
+        document.documentElement.classList.add('has-touch');
+        root.setAttribute('aria-hidden', 'false');
+      }
+
+      const input = game.input;
+      const holdButtons = Array.from(root.querySelectorAll('[data-hold]'));
+      const contextBtn = document.getElementById('contextBtn');
+      const activeHolds = new Set();
+
+      function releaseAll() {
+        activeHolds.clear();
+        input.releaseVirtual('ArrowRight');
+        holdButtons.forEach((btn) => btn.classList.remove('is-active'));
+      }
+
+      function syncHoldState() {
+        if (activeHolds.size > 0) {
+          input.pressVirtual('ArrowRight');
+        } else {
+          input.releaseVirtual('ArrowRight');
+        }
+      }
+
+      holdButtons.forEach((btn) => {
+        btn.addEventListener('pointerdown', (event) => {
+          event.preventDefault();
+          if (typeof btn.setPointerCapture === 'function') {
+            try { btn.setPointerCapture(event.pointerId); } catch (_) {}
+          }
+          activeHolds.add(event.pointerId);
+          btn.classList.add('is-active');
+          syncHoldState();
+        });
+
+        const endHold = (event) => {
+          if (activeHolds.delete(event.pointerId)) {
+            btn.classList.remove('is-active');
+            syncHoldState();
+          }
+        };
+        btn.addEventListener('pointerup', endHold);
+        btn.addEventListener('pointercancel', endHold);
+        btn.addEventListener('pointerleave', endHold);
+        btn.addEventListener('lostpointercapture', endHold);
+      });
+
+      if (contextBtn) {
+        contextBtn.addEventListener('pointerdown', (event) => {
+          event.preventDefault();
+          input.pressVirtual('Space');
+        });
+        const releaseContext = () => input.releaseVirtual('Space');
+        contextBtn.addEventListener('pointerup', releaseContext);
+        contextBtn.addEventListener('pointercancel', releaseContext);
+      }
+
+      // Never let movement stick if focus or visibility is lost mid-hold.
+      window.addEventListener('blur', releaseAll);
+      document.addEventListener('visibilitychange', () => {
+        if (document.hidden) releaseAll();
+      });
+
+      // Reflect game state onto the control layer so the context button hides
+      // during play and updates its label otherwise.
+      let lastState = null;
+      (function syncUi() {
+        const state = game.state;
+        if (state !== lastState) {
+          lastState = state;
+          const playing = state === 'playing' || state === 'paused';
+          if (playing) {
+            root.setAttribute('data-playing', '');
+          } else {
+            root.removeAttribute('data-playing');
+            if (contextBtn) {
+              const label = (state === 'won' || state === 'lost') ? 'Restart' : 'Start';
+              contextBtn.textContent = label;
+              contextBtn.setAttribute('aria-label', label + ' run');
+            }
+          }
+        }
+        requestAnimationFrame(syncUi);
+      })();
+    })();
   } catch (error) {
     window.__RLG_BOOT_ERROR__ = {
       message: error && error.message ? error.message : String(error),
