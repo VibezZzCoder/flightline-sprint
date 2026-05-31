@@ -2,7 +2,7 @@
 
 An early prototype/MVP of a single-file, offline-playable Canvas 2D Red Light / Green Light game with fictionalized, stylized, USAF-inspired training-field visuals.
 
-Play it directly at vibezzzcoder.github.io/flightline-sprint/
+Play it directly at https://vibezzzcoder.github.io/flightline-sprint/
 
 ## How To Play Locally
 
