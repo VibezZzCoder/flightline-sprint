@@ -741,9 +741,13 @@
       this.trackTexture = null;
       this.backgroundTrack = this.createImageAsset(BACKGROUND_DATA_URIS.trackPrimary);
       this.spriteSheets = {
-        runner: this.createSpriteSheet(SPRITE_DATA_URIS.runner, SPRITE_LAYOUT.runner),
-        npc: this.createSpriteSheet(SPRITE_DATA_URIS.npc, SPRITE_LAYOUT.npc),
-        guard: this.createSpriteSheet(SPRITE_DATA_URIS.guard, SPRITE_LAYOUT.guard)
+        // shirtRefill repaints the transparent PT-shirt hole on the PT-gear runners.
+        // The guard wears camo (no PT shirt) and has wide arms-out poses, so the
+        // refill would wrongly fill the negative space between the outstretched arms
+        // with light gray (reads as white over the track) - keep it off for the guard.
+        runner: this.createSpriteSheet(SPRITE_DATA_URIS.runner, SPRITE_LAYOUT.runner, { shirtRefill: true }),
+        npc: this.createSpriteSheet(SPRITE_DATA_URIS.npc, SPRITE_LAYOUT.npc, { shirtRefill: true }),
+        guard: this.createSpriteSheet(SPRITE_DATA_URIS.guard, SPRITE_LAYOUT.guard, { shirtRefill: false })
       };
     }
 
@@ -768,7 +772,7 @@
       return asset;
     }
 
-    createSpriteSheet(dataUri, layout) {
+    createSpriteSheet(dataUri, layout, options = {}) {
       const image = new Image();
       const sheet = {
         image,
@@ -777,11 +781,12 @@
         ready: false,
         failed: false,
         layout,
-        metrics: null
+        metrics: null,
+        options
       };
       image.onload = () => {
         sheet.metrics = this.measureSpriteFrameMetrics(image, layout);
-        sheet.drawSource = this.buildOpaqueSpriteSource(image, layout, sheet.metrics);
+        sheet.drawSource = this.buildOpaqueSpriteSource(image, layout, sheet.metrics, options);
         sheet.ready = true;
       };
       image.onerror = () => {
@@ -867,16 +872,25 @@
 
     // Build a corrected copy of a sprite sheet for drawing only. Frame metrics are
     // still measured from the original image, so ground anchors and the SecFo/runner
-    // scale normalization are unchanged. Two passes run here:
-    //   1) Shirt refill - the source background-removal pass stripped the light-gray
-    //      PT shirt as if it were background, leaving a transparent hole (worst on the
-    //      NPC idle/stopped pose, ~55-60% gone). Over the red/warning track that hole
-    //      reads as an orange/red shirt. Repaint enclosed transparent pixels in the
-    //      upper-torso band with the stable PT gray so shirts stay light gray in
-    //      every phase and pose.
+    // scale normalization are unchanged. Three passes run here:
+    //   0) White-background removal - edge-connected flood fill from each cell corner
+    //      (+ 4 edge midpoints) erases near-white pixels (R,G,B >= 232) that are
+    //      connected to the cell border. Fixes the guard sprite whose arms showed white
+    //      fringe because the source PNG had a solid or poorly-trimmed white background.
+    //      Threshold 232 is safely above the PT-shirt base color (max channel 226) so
+    //      runner/NPC shirts are never erased.
+    //   1) Shirt refill (opt-in via options.shirtRefill) - the source
+    //      background-removal pass stripped the light-gray PT shirt as if it were
+    //      background, leaving a transparent hole (worst on the NPC idle/stopped pose,
+    //      ~55-60% gone). Over the red/warning track that hole reads as an orange/red
+    //      shirt. Repaint enclosed transparent pixels in the upper-torso band with the
+    //      stable PT gray so shirts stay light gray in every phase and pose. Only the
+    //      PT-gear runner/NPC sheets enable this; the camo guard does NOT, because its
+    //      wide arms-out poses would have the negative space between the outstretched
+    //      arms filled with light gray (which reads as white over the track).
     //   2) Alpha harden - drop faint removal halo and force the body mass fully
     //      opaque so the tinted track cannot bleed through soft sprite edges.
-    buildOpaqueSpriteSource(image, layout, metrics) {
+    buildOpaqueSpriteSource(image, layout, metrics, options = {}) {
       try {
         const width = image.naturalWidth || image.width;
         const height = image.naturalHeight || image.height;
@@ -889,11 +903,61 @@
         const imgData = ctx.getImageData(0, 0, width, height);
         const d = imgData.data;
 
-        // Pass 1: refill the PT shirt hole, frame by frame.
+        // Pass 0: edge-connected near-white background removal, per cell.
+        // Guard sprite arms showed white fringe because the source PNG had near-white
+        // background pixels that survived prior processing. Flood-fill from each cell's
+        // 4 corners + 4 edge midpoints to erase any contiguous near-white region
+        // touching the cell border. WH=232 is above PT_SHIRT_BASE max channel (226).
+        if (layout) {
+          const WH = 232;
+          const visited = new Uint8Array(width * height);
+          const seed = (queue, sx, sy, ox, oy, cw, ch) => {
+            if (sx < ox || sx >= ox + cw || sy < oy || sy >= oy + ch) return;
+            const gi = sy * width + sx;
+            if (visited[gi]) return;
+            const pi = gi * 4;
+            if (d[pi] >= WH && d[pi + 1] >= WH && d[pi + 2] >= WH) {
+              visited[gi] = 1;
+              queue.push(sx, sy);
+            }
+          };
+          for (let row = 0; row < layout.rows; row += 1) {
+            for (let col = 0; col < layout.cols; col += 1) {
+              const ox = col * layout.cellW;
+              const oy = row * layout.cellH;
+              const cw = layout.cellW;
+              const ch = layout.cellH;
+              const mhX = ox + Math.floor(cw * 0.5);
+              const mhY = oy + Math.floor(ch * 0.5);
+              const queue = [];
+              // Seed from 4 corners + 4 edge midpoints for robust border coverage.
+              seed(queue, ox,          oy,          ox, oy, cw, ch);
+              seed(queue, ox + cw - 1, oy,          ox, oy, cw, ch);
+              seed(queue, ox,          oy + ch - 1, ox, oy, cw, ch);
+              seed(queue, ox + cw - 1, oy + ch - 1, ox, oy, cw, ch);
+              seed(queue, mhX,         oy,          ox, oy, cw, ch);
+              seed(queue, mhX,         oy + ch - 1, ox, oy, cw, ch);
+              seed(queue, ox,          mhY,         ox, oy, cw, ch);
+              seed(queue, ox + cw - 1, mhY,         ox, oy, cw, ch);
+              let qi = 0;
+              while (qi < queue.length) {
+                const px = queue[qi++];
+                const py = queue[qi++];
+                d[(py * width + px) * 4 + 3] = 0;
+                seed(queue, px - 1, py, ox, oy, cw, ch);
+                seed(queue, px + 1, py, ox, oy, cw, ch);
+                seed(queue, px, py - 1, ox, oy, cw, ch);
+                seed(queue, px, py + 1, ox, oy, cw, ch);
+              }
+            }
+          }
+        }
+
+        // Pass 1: refill the PT shirt hole, frame by frame (PT-gear sheets only).
         const SHIRT = [0xd8, 0xdd, 0xe2];  // PT_SHIRT_BASE
         const SHIRT_SHADOW = [0xae, 0xb8, 0xc2]; // PT_SHIRT_SHADOW
         const OPAQUE = 128;
-        if (layout && metrics) {
+        if (options.shirtRefill && layout && metrics) {
           for (let row = 0; row < layout.rows; row += 1) {
             for (let col = 0; col < layout.cols; col += 1) {
               const m = metrics[row] && metrics[row][col];
