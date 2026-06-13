@@ -43,3 +43,7 @@ The project uses fictionalized, stylized, military-inspired characters/settings.
 The GPL applies to this project's original code and original assets. It does not grant rights to use third-party trademarks, logos, seals, emblems, official marks, official insignia, or protected identifiers.
 
 Do not imply ownership of or affiliation with the U.S. Air Force, Department of the Air Force, or Department of Defense.
+
+## Korean Voiceover Credits
+
+Green light red light by Sandermotions -- https://freesound.org/s/592876/ -- License: Creative Commons 0
