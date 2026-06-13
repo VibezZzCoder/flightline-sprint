@@ -1,14 +1,27 @@
 # Red Light / Green Light: Flightline Sprint
 
-An early prototype/MVP of a single-file, offline-playable Canvas 2D Red Light / Green Light game with fictionalized, stylized, USAF-inspired training-field visuals.
+A playable single-file, offline Canvas 2D Red Light / Green Light game with fictionalized, stylized, USAF-inspired training-field visuals.
 
 Play it directly at https://vibezzzcoder.github.io/flightline-sprint/
+
+## Screenshot
+
+![Flightline Sprint gameplay in a mobile landscape viewport](flightline-sprint-mobile-landscape.png)
+
+## Features
+
+- Long horizontally scrolling race with camera-follow gameplay
+- Green, warning, and red phases synchronized to an accelerating chant
+- Twelve independently reacting NPC runners
+- Keyboard and mobile touch controls
+- Win, caught-moving, timeout, pause, restart, mute, and debug states
+- Embedded visuals and audio with no external runtime requests
 
 ## How To Play Locally
 
 Open `flightline-sprint.html` directly in a browser. No install, build step, local server, CDN, package manager, or external runtime dependency is required.
 
-## Controls
+## Keyboard Controls
 
 - `Space` or `Enter`: start or restart
 - `D` or `ArrowRight`: sprint right
@@ -16,9 +29,15 @@ Open `flightline-sprint.html` directly in a browser. No install, build step, loc
 - `M`: toggle sound
 - `F1` or `` ` ``: toggle debug overlay
 
+## Touch Controls
+
+- Tap `Start` or `Restart` when shown.
+- Hold either bottom-corner `Hold ▶ Move` button to sprint.
+- Release before red light.
+
 ## Status
 
-Early prototype/MVP.
+Playable prototype/MVP. The exact source and release artifact is `flightline-sprint.html`.
 
 ## License
 
