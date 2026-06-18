@@ -174,13 +174,6 @@
       }
     }
 
-    @media (orientation: portrait) {
-      .hold-btn {
-        width: min(40vw, 210px);
-        height: min(20vh, 160px);
-      }
-    }
-
     @media (max-width: 760px) {
       body {
         padding: 8px;
@@ -188,6 +181,25 @@
 
       #gameShell {
         width: min(calc(100vw - 16px), calc(177.7778vh - 28.4445px), 1280px);
+      }
+    }
+
+    @media (orientation: portrait) {
+      body {
+        min-height: 100dvh;
+        height: 100dvh;
+        justify-items: center;
+        align-items: start;
+        padding-top: max(56px, calc(env(safe-area-inset-top) + 32px));
+      }
+
+      #touchControls {
+        bottom: clamp(24px, 5vh, 48px);
+      }
+
+      .hold-btn {
+        width: min(40vw, 210px);
+        height: min(20vh, 160px);
       }
     }
 
@@ -2404,7 +2416,7 @@
     }
 
     resetRun() {
-      // Started from a Space/Enter press - a valid gesture to unlock audio.
+      // Started from a Space/Enter press or touch context-button gesture.
       this.audio.ensureContext();
       this.input.reset();
       this.state = GAME_STATES.playing;
@@ -2420,6 +2432,12 @@
         npc.reset(laneY);
       });
       this.announce('Run started. Green light.');
+    }
+
+    startFromUserGesture() {
+      if (this.state === GAME_STATES.playing || this.state === GAME_STATES.paused) return false;
+      this.resetRun();
+      return true;
     }
 
     loop(timestamp) {
@@ -2442,7 +2460,7 @@
     handleGlobalInput() {
       const startPressed = this.input.wasPressed('Space') || this.input.wasPressed('Enter');
       if (startPressed && this.state !== GAME_STATES.playing && this.state !== GAME_STATES.paused) {
-        this.resetRun();
+        this.startFromUserGesture();
       }
 
       if (this.input.wasPressed('KeyP')) {
@@ -2639,7 +2657,10 @@
       if (contextBtn) {
         contextBtn.addEventListener('pointerdown', (event) => {
           event.preventDefault();
-          input.pressVirtual('Space');
+          // iOS home-screen web apps require media playback to begin inside the
+          // same trusted touch gesture. Starting synchronously here keeps the
+          // existing game start path but avoids deferring song.play() to rAF.
+          if (!game.startFromUserGesture()) input.pressVirtual('Space');
         });
         const releaseContext = () => input.releaseVirtual('Space');
         contextBtn.addEventListener('pointerup', releaseContext);
