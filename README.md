@@ -14,7 +14,7 @@ Play the game at https://vibezzzcoder.github.io/flightline-sprint
 Every championship runs through all three heats:
 
 1. **Brake Check** teaches acceleration, coasting, and precise stops.
-2. **Signal Run** adds six-lane pulsing gate banks and score chains.
+2. **Signal Run** adds fixed-target route gates and score chains: green is Perfect, either amber neighbor is Good.
 3. **Final Protocol** combines tighter signals, more gates, faster rivals, placement scoring, and braking precision.
 
 A caught or timed-out heat still awards limited progress points and advances to the next heat. The maximum championship score is 30,000. Bronze starts at 12,000, Silver at 20,000, and Gold requires 25,000 plus completion of all three heats.
@@ -25,7 +25,8 @@ A caught or timed-out heat still awards limited progress points and advances to 
 - Discrete movement across all six lanes, with lateral motion counted during Red
 - Standard, Advanced, and Elite available immediately
 - Fixed per-difficulty, per-heat seeds for repeatable record attempts
-- Authored pulse gates with Perfect, Good, miss, chain, and multiplier scoring
+- Pre-announced route gates with fixed green target lanes, amber Good lanes, Perfect/Good/miss feedback, chains, and multipliers
+- Original embedded title-screen key art with a responsive accessible menu layer
 - Per-difficulty championship, medal, heat, time, and gate-chain records
 - Twelve non-colliding visual rivals with deterministic behavior
 - Keyboard and mirrored multi-touch controls
@@ -55,8 +56,8 @@ Menus use normal buttons and can be navigated with the keyboard.
 
 ## Scoring
 
-- Gate Perfect: 500 base points
-- Gate Good: 300 base points
+- Green target lane: Perfect, 500 base points
+- Either adjacent amber lane: Good, 300 base points
 - Each successful consecutive bank adds `0.25×`, capped at `2×`
 - A miss resets the chain
 - Every heat is normalized to 10,000 points
