@@ -12,7 +12,7 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-  <title>Red Light / Green Light: Flightline Sprint</title>
+  <title>Flightline Sprint: Momentum Protocol</title>
   <link rel="icon" href="data:,">
   <style>
     /*
@@ -71,6 +71,160 @@
       image-rendering: auto;
     }
 
+    #menuOverlay {
+      position: absolute;
+      inset: 0;
+      z-index: 5;
+      display: grid;
+      place-items: center;
+      padding: clamp(18px, 4vw, 44px);
+      background: linear-gradient(180deg, rgba(7, 12, 18, 0.72), rgba(7, 12, 18, 0.9));
+      overflow: auto;
+    }
+
+    #menuOverlay[hidden] {
+      display: none;
+    }
+
+    .menu-panel {
+      width: min(680px, 100%);
+      max-height: 100%;
+      overflow: auto;
+      padding: clamp(22px, 4vw, 38px);
+      border: 1px solid var(--panel-border);
+      border-radius: 20px;
+      background: rgba(12, 20, 29, 0.94);
+      box-shadow: 0 24px 70px rgba(0, 0, 0, 0.5), inset 0 1px rgba(255, 255, 255, 0.05);
+      text-align: center;
+    }
+
+    .menu-eyebrow {
+      margin: 0 0 8px;
+      color: var(--blue);
+      font-size: 13px;
+      font-weight: 900;
+      letter-spacing: 0.16em;
+      text-transform: uppercase;
+    }
+
+    .menu-panel h1 {
+      margin: 0;
+      color: #f3f8fb;
+      font-size: clamp(34px, 6vw, 58px);
+      line-height: 0.98;
+      letter-spacing: -0.035em;
+      text-shadow: 0 0 28px rgba(121, 169, 216, 0.26);
+    }
+
+    .menu-subtitle {
+      margin: 8px 0 0;
+      color: #9fc5e8;
+      font-size: clamp(16px, 2.6vw, 23px);
+      font-weight: 800;
+      letter-spacing: 0.12em;
+      text-transform: uppercase;
+    }
+
+    .menu-copy {
+      max-width: 560px;
+      margin: 16px auto 22px;
+      color: #c9d7df;
+      font-size: clamp(14px, 2vw, 18px);
+      line-height: 1.45;
+    }
+
+    .difficulty-picker,
+    .menu-actions {
+      display: flex;
+      flex-wrap: wrap;
+      justify-content: center;
+      gap: 10px;
+      margin-top: 18px;
+    }
+
+    .menu-button,
+    .difficulty-button {
+      min-height: 44px;
+      padding: 11px 18px;
+      border: 1px solid rgba(159, 197, 232, 0.42);
+      border-radius: 999px;
+      background: rgba(121, 169, 216, 0.09);
+      color: #eaf4fb;
+      font: 800 14px/1 system-ui, -apple-system, sans-serif;
+      letter-spacing: 0.06em;
+      text-transform: uppercase;
+      cursor: pointer;
+      touch-action: manipulation;
+    }
+
+    .menu-button.primary,
+    .difficulty-button[aria-pressed="true"] {
+      border-color: #6fe39a;
+      background: rgba(63, 212, 111, 0.9);
+      color: #07120b;
+      box-shadow: 0 8px 24px rgba(38, 169, 86, 0.25);
+    }
+
+    .menu-button:focus-visible,
+    .difficulty-button:focus-visible,
+    .hold-btn:focus-visible,
+    .lane-btn:focus-visible {
+      outline: 3px solid #ffffff;
+      outline-offset: 3px;
+    }
+
+    .result-grid,
+    .record-grid {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 8px 14px;
+      margin: 18px 0 0;
+      text-align: left;
+    }
+
+    .result-row,
+    .record-row {
+      display: flex;
+      justify-content: space-between;
+      gap: 18px;
+      padding: 9px 11px;
+      border-radius: 9px;
+      background: rgba(238, 245, 248, 0.06);
+      color: #b9cbd6;
+      font-size: 14px;
+    }
+
+    .result-row strong,
+    .record-row strong {
+      color: #ffffff;
+      font-variant-numeric: tabular-nums;
+    }
+
+    .menu-badge {
+      display: inline-block;
+      margin-top: 16px;
+      padding: 8px 14px;
+      border: 1px solid rgba(255, 224, 122, 0.55);
+      border-radius: 999px;
+      color: #ffe07a;
+      font-weight: 900;
+      letter-spacing: 0.1em;
+      text-transform: uppercase;
+    }
+
+    .menu-note,
+    .legal-note {
+      margin: 18px auto 0;
+      color: #91a4af;
+      font-size: 12px;
+      line-height: 1.45;
+    }
+
+    .new-record {
+      color: #6fe39a;
+      font-weight: 900;
+    }
+
     #screenReaderStatus {
       position: absolute;
       width: 1px;
@@ -105,8 +259,26 @@
       pointer-events: none;
     }
 
-    html.has-touch #touchControls {
+    html.has-touch #touchControls[data-playing] {
       display: flex;
+    }
+
+    .touch-pod {
+      display: flex;
+      align-items: stretch;
+      gap: 7px;
+      pointer-events: none;
+    }
+
+    .touch-pod.is-mirrored {
+      flex-direction: row-reverse;
+    }
+
+    .lane-stack {
+      display: grid;
+      grid-template-rows: 1fr 1fr;
+      gap: 6px;
+      pointer-events: none;
     }
 
     .hold-btn {
@@ -135,30 +307,24 @@
       transform: scale(0.97);
     }
 
-    #contextBtn {
+    .lane-btn {
       pointer-events: auto;
-      flex: 0 0 auto;
-      align-self: center;
-      margin-bottom: min(8vh, 48px);
-      padding: 14px 28px;
-      border: 1px solid var(--green);
-      border-radius: 999px;
-      background: rgba(63, 212, 111, 0.92);
-      color: #08130b;
-      font: 800 clamp(15px, 4.4vw, 22px)/1 system-ui, -apple-system, sans-serif;
-      letter-spacing: 0.08em;
-      text-transform: uppercase;
+      width: min(14vw, 64px);
+      min-width: 46px;
+      border: 1px solid rgba(121, 169, 216, 0.62);
+      border-radius: 12px;
+      background: rgba(13, 20, 29, 0.88);
+      color: #eaf4fb;
+      font: 900 clamp(17px, 4vw, 24px)/1 system-ui, -apple-system, sans-serif;
       touch-action: manipulation;
       user-select: none;
       -webkit-user-select: none;
       -webkit-tap-highlight-color: transparent;
-      cursor: pointer;
-      box-shadow: 0 10px 30px rgba(0, 0, 0, 0.45);
     }
 
-    /* Context button only makes sense when not actively playing. */
-    #touchControls[data-playing] #contextBtn {
-      visibility: hidden;
+    .lane-btn.is-active {
+      border-color: #9fc5e8;
+      background: rgba(121, 169, 216, 0.32);
     }
 
     @media (orientation: landscape) {
@@ -169,8 +335,12 @@
         font-size: clamp(12px, 2.2vw, 16px);
         opacity: 0.86;
       }
-      #contextBtn {
-        margin-bottom: min(4vh, 24px);
+      .lane-btn {
+        width: min(8vw, 54px);
+        min-width: 42px;
+      }
+      .touch-pod {
+        gap: 6px;
       }
     }
 
@@ -198,14 +368,41 @@
       }
 
       .hold-btn {
-        width: min(40vw, 210px);
-        height: min(20vh, 160px);
+        width: min(28vw, 130px);
+        height: min(17vh, 138px);
+      }
+
+      .lane-btn {
+        width: min(12vw, 52px);
+        min-width: 40px;
       }
     }
 
     @media (prefers-reduced-motion: reduce) {
-      .hold-btn {
+      .hold-btn,
+      .menu-button,
+      .difficulty-button {
         transition: none;
+      }
+    }
+
+    @media (max-height: 520px) and (orientation: landscape) {
+      #menuOverlay {
+        align-items: start;
+        padding: 10px;
+      }
+
+      .menu-panel {
+        padding: 16px 22px;
+      }
+
+      .menu-copy {
+        margin: 8px auto 12px;
+      }
+
+      .difficulty-picker,
+      .menu-actions {
+        margin-top: 10px;
       }
     }
   </style>
@@ -214,12 +411,26 @@
   <main id="gameShell" aria-label="Red Light Green Light USAF-inspired canvas game">
     <canvas id="gameCanvas" width="1280" height="720"></canvas>
     <div id="screenReaderStatus" aria-live="polite"></div>
+    <section id="menuOverlay" aria-live="polite">
+      <div id="menuPanel" class="menu-panel"></div>
+    </section>
   </main>
 
   <div id="touchControls" aria-hidden="true">
-    <button class="hold-btn" data-hold type="button" aria-label="Hold to move (left)">Hold ▶<br>Move</button>
-    <button id="contextBtn" type="button" aria-label="Start run">Start</button>
-    <button class="hold-btn" data-hold type="button" aria-label="Hold to move (right)">Hold ▶<br>Move</button>
+    <div class="touch-pod">
+      <button class="hold-btn" data-hold type="button" aria-label="Hold to move using left thumb">Hold ▶<br>Move</button>
+      <div class="lane-stack" aria-label="Left lane controls">
+        <button class="lane-btn" data-lane="up" type="button" aria-label="Move up one lane">▲</button>
+        <button class="lane-btn" data-lane="down" type="button" aria-label="Move down one lane">▼</button>
+      </div>
+    </div>
+    <div class="touch-pod is-mirrored">
+      <button class="hold-btn" data-hold type="button" aria-label="Hold to move using right thumb">Hold ▶<br>Move</button>
+      <div class="lane-stack" aria-label="Right lane controls">
+        <button class="lane-btn" data-lane="up" type="button" aria-label="Move up one lane">▲</button>
+        <button class="lane-btn" data-lane="down" type="button" aria-label="Move down one lane">▼</button>
+      </div>
+    </div>
   </div>
 
   <script>
@@ -232,17 +443,22 @@
   const CONFIG = Object.freeze({
     width: 1280,
     height: 720,
-    // Long scrolling run (~50 s): the world is several screens wide and the
-    // camera pans across a tiled track. startX/finishX are WORLD coordinates.
+    // Long scrolling heats: the world is several screens wide and the camera
+    // pans across a tiled track. startX/finishX are WORLD coordinates.
     timeLimit: 60,
     worldWidth: 4560,
     startX: 150,
     finishX: 4300,
     cameraAnchorX: 380,
-    playerSpeed: 160,
+    // Momentum Protocol physics are shared by every difficulty so muscle memory
+    // remains stable. Difficulty changes the signals around this same runner.
+    playerSpeed: 180,
+    playerAcceleration: 240,
+    playerBraking: 320,
+    playerLaneSpeed: 220,
+    perfectStopSpeed: 8,
     redMovementTolerance: 18,
-    // Reserve the bottom lane for the player so the highlighted silhouette does
-    // not disappear inside the NPC pack at the start or during overtakes.
+    // The player starts in the bottom lane but can route across all six lanes.
     playerLaneY: 532,
     npcCount: 12,
     // Red-light (danger) window. Green + warning are now driven by the chant
@@ -292,10 +508,11 @@
 
   const GAME_STATES = Object.freeze({
     title: 'title',
+    heatBriefing: 'heat_briefing',
     playing: 'playing',
     paused: 'paused',
-    won: 'won',
-    lost: 'lost'
+    heatResults: 'heat_results',
+    championshipResults: 'championship_results'
   });
 
   const LIGHT_STATES = Object.freeze({
@@ -315,6 +532,105 @@
     caughtMoving: 'caught_moving',
     timeout: 'timeout'
   });
+
+  const DIFFICULTIES = Object.freeze({
+    standard: Object.freeze({
+      id: 'standard',
+      label: 'Standard',
+      shortLabel: 'STD',
+      seedSalt: 0x13579bdf,
+      timeOffset: 4,
+      warningDuration: 0.68,
+      gatePeriod: 1.7,
+      gateGoodWindow: 0.62,
+      gatePerfectWindow: 0.24,
+      songSpeedStart: 0.94,
+      songSpeedStep: 0.13,
+      songSpeedMax: 2.22,
+      npcSpeedScale: 0.93
+    }),
+    advanced: Object.freeze({
+      id: 'advanced',
+      label: 'Advanced',
+      shortLabel: 'ADV',
+      seedSalt: 0x2468ace1,
+      timeOffset: 0,
+      warningDuration: 0.56,
+      gatePeriod: 1.5,
+      gateGoodWindow: 0.5,
+      gatePerfectWindow: 0.19,
+      songSpeedStart: 1.0,
+      songSpeedStep: 0.15,
+      songSpeedMax: 2.4,
+      npcSpeedScale: 1.0
+    }),
+    elite: Object.freeze({
+      id: 'elite',
+      label: 'Elite',
+      shortLabel: 'ELT',
+      seedSalt: 0x51f15eed,
+      timeOffset: -4,
+      warningDuration: 0.46,
+      gatePeriod: 1.3,
+      gateGoodWindow: 0.4,
+      gatePerfectWindow: 0.15,
+      songSpeedStart: 1.06,
+      songSpeedStep: 0.17,
+      songSpeedMax: 2.55,
+      npcSpeedScale: 1.07
+    })
+  });
+
+  const HEAT_DEFINITIONS = Object.freeze([
+    Object.freeze({
+      id: 'brake_check',
+      number: 1,
+      title: 'Brake Check',
+      objective: 'Build speed, release through Warning, and stop cleanly before Red.',
+      scoreProfile: 'brake',
+      seed: 0x0b12ace1,
+      timeLimit: 62,
+      npcSpeedScale: 0.94,
+      songStepBonus: 0,
+      gateXs: Object.freeze([])
+    }),
+    Object.freeze({
+      id: 'signal_run',
+      number: 2,
+      title: 'Signal Run',
+      objective: 'Choose a lane and cross each pulse bank while its marker is lit.',
+      scoreProfile: 'gates',
+      seed: 0x51a9a102,
+      timeLimit: 60,
+      npcSpeedScale: 1.0,
+      songStepBonus: 0.02,
+      gateXs: Object.freeze([760, 1320, 1880, 2460, 3070, 3690])
+    }),
+    Object.freeze({
+      id: 'final_protocol',
+      number: 3,
+      title: 'Final Protocol',
+      objective: 'Combine clean stops, pulse routing, and finish placement.',
+      scoreProfile: 'final',
+      seed: 0xf1a1c303,
+      timeLimit: 58,
+      npcSpeedScale: 1.06,
+      songStepBonus: 0.04,
+      gateXs: Object.freeze([620, 1080, 1540, 2010, 2480, 2950, 3420, 3890])
+    })
+  ]);
+
+  const SCORE_RULES = Object.freeze({
+    maxHeatScore: 10000,
+    failedHeatCap: 3500,
+    gateGood: 300,
+    gatePerfect: 500,
+    gateChainStep: 0.25,
+    gateChainMax: 2,
+    medals: Object.freeze({ bronze: 12000, silver: 20000, gold: 25000 })
+  });
+
+  const SAVE_KEY = 'flightlineSprint.momentumProtocol.v1';
 
   const PHASE_LABELS = Object.freeze({
     green: 'GREEN LIGHT',
@@ -398,6 +714,37 @@
     return a + (b - a) * t;
   }
 
+  function approach(value, target, amount) {
+    if (value < target) return Math.min(target, value + amount);
+    if (value > target) return Math.max(target, value - amount);
+    return target;
+  }
+
+  class SeededRng {
+    constructor(seed) {
+      this.state = (seed >>> 0) || 0x6d2b79f5;
+    }
+
+    next() {
+      let t = this.state += 0x6d2b79f5;
+      t = Math.imul(t ^ (t >>> 15), t | 1);
+      t ^= t + Math.imul(t ^ (t >>> 7), t | 61);
+      return ((t ^ (t >>> 14)) >>> 0) / 4294967296;
+    }
+
+    range(min, max) {
+      return min + this.next() * (max - min);
+    }
+
+    int(min, max) {
+      return Math.floor(this.range(min, max + 1));
+    }
+
+    choose(list) {
+      return list[Math.floor(this.next() * list.length)];
+    }
+  }
+
   // Scale a #rgb/#rrggbb colour by a brightness factor (<1 darken, >1 lighten).
   // Used by the procedural runner for cheap, palette-driven shading/AO.
   function shadeHex(hex, factor) {
@@ -409,18 +756,6 @@
     const g = clamp(Math.round(((n >> 8) & 255) * factor), 0, 255);
     const b = clamp(Math.round((n & 255) * factor), 0, 255);
     return `rgb(${r}, ${g}, ${b})`;
-  }
-
-  function randRange(min, max) {
-    return min + Math.random() * (max - min);
-  }
-
-  function randInt(min, max) {
-    return Math.floor(randRange(min, max + 1));
-  }
-
-  function choose(list) {
-    return list[Math.floor(Math.random() * list.length)];
   }
 
   function formatTime(seconds) {
@@ -453,7 +788,9 @@
       this.keys = new Set();
       this.pressed = new Set();
       this.movementKeys = new Set(['ArrowRight', 'KeyD']);
-      this.blockedKeys = new Set(['ArrowRight', 'Space', 'F1']);
+      this.laneUpKeys = new Set(['ArrowUp', 'KeyW']);
+      this.laneDownKeys = new Set(['ArrowDown', 'KeyS']);
+      this.blockedKeys = new Set(['ArrowRight', 'ArrowUp', 'ArrowDown', 'Space', 'Enter', 'F1']);
 
       window.addEventListener('keydown', (event) => this.onKeyDown(event), { passive: false });
       window.addEventListener('keyup', (event) => this.onKeyUp(event), { passive: false });
@@ -501,6 +838,20 @@
     wantsMoveRight() {
       for (const code of this.movementKeys) {
         if (this.keys.has(code)) return true;
+      }
+      return false;
+    }
+
+    wantsLaneUp() {
+      for (const code of this.laneUpKeys) {
+        if (this.pressed.has(code)) return true;
+      }
+      return false;
+    }
+
+    wantsLaneDown() {
+      for (const code of this.laneDownKeys) {
+        if (this.pressed.has(code)) return true;
       }
       return false;
     }
@@ -729,9 +1080,10 @@
       this.accent = accent;
       this.speed = speed;
       this.vx = 0;
+      this.vy = 0;
       this.state = ENTITY_STATES.idle;
       this.radius = 16;
-      this.bob = Math.random() * Math.PI * 2;
+      this.bob = 0;
       this.finishTime = null;
       this.eliminatedAt = null;
       this.facing = 1;
@@ -756,6 +1108,7 @@
     finish(gameTime) {
       this.state = ENTITY_STATES.finished;
       this.vx = 0;
+      this.vy = 0;
       this.finishTime = gameTime;
       this.x = Math.max(this.x, CONFIG.finishX);
     }
@@ -763,6 +1116,7 @@
     eliminate(gameTime) {
       this.state = ENTITY_STATES.eliminated;
       this.vx = 0;
+      this.vy = 0;
       this.eliminatedAt = gameTime;
     }
   }
@@ -792,42 +1146,76 @@
           runnerVariant: 'player'
         }
       });
+      this.currentLane = VISUALS.laneYs.length - 1;
+      this.targetLane = this.currentLane;
       this.redStartX = this.x;
+      this.redStartY = this.y;
       this.redDrift = 0;
       this.wasMovingOnRed = false;
     }
 
-    reset() {
+    reset(laneYs = VISUALS.laneYs) {
+      this.currentLane = laneYs.length - 1;
+      this.targetLane = this.currentLane;
       this.x = CONFIG.startX;
-      this.y = CONFIG.playerLaneY;
+      this.y = laneYs[this.currentLane];
       this.vx = 0;
+      this.vy = 0;
       this.state = ENTITY_STATES.idle;
       this.finishTime = null;
       this.eliminatedAt = null;
       this.redStartX = this.x;
+      this.redStartY = this.y;
       this.redDrift = 0;
       this.wasMovingOnRed = false;
     }
 
     markRedStart() {
       this.redStartX = this.x;
+      this.redStartY = this.y;
       this.redDrift = 0;
       this.wasMovingOnRed = false;
     }
 
-    update(dt, input, lightState, elapsedTime) {
+    requestLane(delta, laneYs) {
+      if (this.targetLane !== this.currentLane) return false;
+      const nextLane = clamp(this.currentLane + delta, 0, laneYs.length - 1);
+      if (nextLane === this.currentLane) return false;
+      this.targetLane = nextLane;
+      return true;
+    }
+
+    update(dt, input, lightState, elapsedTime, laneYs) {
       if (!this.isActive) return;
 
+      if (input.wantsLaneUp()) this.requestLane(-1, laneYs);
+      if (input.wantsLaneDown()) this.requestLane(1, laneYs);
+
+      const previousX = this.x;
+      const previousY = this.y;
       const wantsMove = input.wantsMoveRight();
-      const canMove = wantsMove;
-      this.vx = canMove ? this.speed : 0;
+      const rate = wantsMove ? CONFIG.playerAcceleration : CONFIG.playerBraking;
+      const targetSpeed = wantsMove ? this.speed : 0;
+      this.vx = approach(this.vx, targetSpeed, rate * dt);
       this.x += this.vx * dt;
-      this.bob += dt * (this.vx > 0 ? 14 : 5);
-      this.state = this.vx > 0 ? ENTITY_STATES.moving : ENTITY_STATES.idle;
+
+      const targetY = laneYs[this.targetLane];
+      const nextY = approach(this.y, targetY, CONFIG.playerLaneSpeed * dt);
+      this.vy = dt > 0 ? (nextY - this.y) / dt : 0;
+      this.y = nextY;
+      if (Math.abs(this.y - targetY) < 0.01) {
+        this.y = targetY;
+        this.currentLane = this.targetLane;
+        this.vy = 0;
+      }
+
+      const motion = Math.hypot(this.vx, this.vy);
+      this.bob += dt * (this.vx > 1 ? 14 : 5);
+      this.state = motion > 2 ? ENTITY_STATES.moving : ENTITY_STATES.idle;
 
       if (lightState === LIGHT_STATES.red) {
-        this.redDrift = Math.max(0, this.x - this.redStartX);
-        if (this.vx > 0.1) this.wasMovingOnRed = true;
+        this.redDrift += Math.hypot(this.x - previousX, this.y - previousY);
+        if (motion > 0.1) this.wasMovingOnRed = true;
       }
 
       if (this.x >= CONFIG.finishX) {
@@ -841,48 +1229,50 @@
   ------------------------------------------------------------------------- */
 
   class NPC extends Entity {
-    constructor(index, laneY) {
+    constructor(index, laneY, rng, speedScale = 1) {
       const palettes = [
         ['#86a9c8', '#e4edf2'],
         ['#94b8d4', '#c8d7e1'],
         ['#6f91b6', '#f0f5f7'],
         ['#a5b5bd', '#78a0c7']
       ];
-      const palette = choose(palettes);
+      const palette = rng.choose(palettes);
       const bodyTypes = ['lean', 'medium', 'stocky'];
       const hairStyles = ['close', 'bun', 'short', 'cap'];
       const gearVariants = ['shorts', 'shorts', 'shorts', 'jacket', 'trackpants'];
-      const shirtShade = choose(VISUALS.shirtShades);
-      const shortsShade = choose(VISUALS.shortsShades);
-      const npcLaneCount = VISUALS.laneYs.length - 1;
+      const shirtShade = rng.choose(VISUALS.shirtShades);
+      const shortsShade = rng.choose(VISUALS.shortsShades);
+      const npcLaneCount = VISUALS.laneYs.length;
       const laneIndex = index % npcLaneCount;
       const laneGroup = Math.floor(index / npcLaneCount);
-      const laneStagger = [-18, 8, 30, -4, 20][laneIndex];
-      const startSlotX = ([-62, 18, 98][laneGroup] || 98) + laneStagger;
+      const laneStagger = [-18, 8, 30, -4, 20, 0][laneIndex];
+      const startSlotX = ([-62, 34][laneGroup] || 34) + laneStagger;
       super({
-        x: CONFIG.startX + startSlotX + randRange(-10, 10),
+        x: CONFIG.startX + startSlotX + rng.range(-10, 10),
         y: laneY,
-        lane: index,
+        lane: laneIndex,
         color: palette[0],
         accent: palette[1],
-        speed: randRange(...CONFIG.npcSpeedRange),
+        speed: rng.range(...CONFIG.npcSpeedRange) * speedScale,
         visual: {
-          bodyType: choose(bodyTypes),
-          skinTone: choose(VISUALS.skinTones),
-          hairStyle: choose(hairStyles),
-          hairColor: choose(VISUALS.hairColors),
-          gearVariant: choose(gearVariants),
+          bodyType: rng.choose(bodyTypes),
+          skinTone: rng.choose(VISUALS.skinTones),
+          hairStyle: rng.choose(hairStyles),
+          hairColor: rng.choose(VISUALS.hairColors),
+          gearVariant: rng.choose(gearVariants),
           shirtShade,
           shortsShade,
-          shoeColor: choose(VISUALS.shoeColors),
+          shoeColor: rng.choose(VISUALS.shoeColors),
           runnerVariant: `npc_${index % 6}`,
           spriteRow: index % 6
         }
       });
 
-      this.reliability = randRange(...CONFIG.npcReliabilityRange);
+      this.reliability = rng.range(...CONFIG.npcReliabilityRange);
       this.redReactionDelay = 0;
       this.redPanicTime = 0;
+      this.redPanicScale = 0;
+      this.redStopJitter = 0;
       this.stopDecisionMade = false;
       this.warningScale = 0;
       this.warningFreeze = false;
@@ -890,20 +1280,25 @@
       this.greenSurgeTime = 0;
       this.greenSurgeScale = 1;
       this.cruiseScale = 1;
-      this.seedOffset = Math.random() * 100;
+      this.seedOffset = rng.next() * 100;
+      this.bob = rng.next() * Math.PI * 2;
       this.startSlotX = startSlotX;
     }
 
-    reset(laneY) {
-      this.x = CONFIG.startX + this.startSlotX + randRange(-10, 10);
+    reset(laneY, rng, speedScale = 1) {
+      this.x = CONFIG.startX + this.startSlotX + rng.range(-10, 10);
       this.y = laneY;
       this.vx = 0;
+      this.vy = 0;
       this.state = ENTITY_STATES.idle;
       this.finishTime = null;
       this.eliminatedAt = null;
-      this.reliability = randRange(...CONFIG.npcReliabilityRange);
+      this.speed = rng.range(...CONFIG.npcSpeedRange) * speedScale;
+      this.reliability = rng.range(...CONFIG.npcReliabilityRange);
       this.redReactionDelay = 0;
       this.redPanicTime = 0;
+      this.redPanicScale = 0;
+      this.redStopJitter = 0;
       this.stopDecisionMade = false;
       this.warningScale = 0;
       this.warningFreeze = false;
@@ -911,19 +1306,23 @@
       this.greenSurgeTime = 0;
       this.greenSurgeScale = 1;
       this.cruiseScale = 1;
-      this.visual.shirtShade = choose(VISUALS.shirtShades);
-      this.visual.shortsShade = choose(VISUALS.shortsShades);
-      this.visual.shoeColor = choose(VISUALS.shoeColors);
+      this.visual.shirtShade = rng.choose(VISUALS.shirtShades);
+      this.visual.shortsShade = rng.choose(VISUALS.shortsShades);
+      this.visual.shoeColor = rng.choose(VISUALS.shoeColors);
+      this.seedOffset = rng.next() * 100;
+      this.bob = rng.next() * Math.PI * 2;
     }
 
-    onNewLight(lightState) {
+    onNewLight(lightState, rng) {
       if (lightState === LIGHT_STATES.red) {
         this.stopDecisionMade = true;
-        this.redReactionDelay = randRange(...CONFIG.npcReactionGraceRange);
-        const panicChance = randRange(...CONFIG.npcPanicChanceRange);
-        this.redPanicTime = Math.random() > this.reliability || Math.random() < panicChance
-          ? randRange(...CONFIG.npcPanicDurationRange)
+        this.redReactionDelay = rng.range(...CONFIG.npcReactionGraceRange);
+        const panicChance = rng.range(...CONFIG.npcPanicChanceRange);
+        this.redPanicTime = rng.next() > this.reliability || rng.next() < panicChance
+          ? rng.range(...CONFIG.npcPanicDurationRange)
           : 0;
+        this.redPanicScale = rng.range(...CONFIG.npcRedPanicSpeedScaleRange);
+        this.redStopJitter = rng.range(...CONFIG.npcStopJitterRange);
       }
 
       if (lightState === LIGHT_STATES.green) {
@@ -932,23 +1331,23 @@
         this.redPanicTime = 0;
         this.warningFreeze = false;
         this.warningScale = 0;
-        this.greenHesitationTime = Math.random() < CONFIG.npcGreenHesitationChance
-          ? randRange(...CONFIG.npcGreenHesitationDurationRange)
+        this.greenHesitationTime = rng.next() < CONFIG.npcGreenHesitationChance
+          ? rng.range(...CONFIG.npcGreenHesitationDurationRange)
           : 0;
-        this.greenSurgeTime = Math.random() < CONFIG.npcGreenSurgeChance
-          ? randRange(...CONFIG.npcGreenSurgeDurationRange)
+        this.greenSurgeTime = rng.next() < CONFIG.npcGreenSurgeChance
+          ? rng.range(...CONFIG.npcGreenSurgeDurationRange)
           : 0;
-        this.greenSurgeScale = randRange(...CONFIG.npcGreenSurgeScaleRange);
-        this.cruiseScale = randRange(...CONFIG.npcCruiseScaleRange);
+        this.greenSurgeScale = rng.range(...CONFIG.npcGreenSurgeScaleRange);
+        this.cruiseScale = rng.range(...CONFIG.npcCruiseScaleRange);
       }
 
       if (lightState === LIGHT_STATES.warning) {
-        this.warningFreeze = Math.random() < CONFIG.npcWarningFreezeChance;
-        this.warningScale = randRange(...CONFIG.npcWarningSpeedScaleRange);
+        this.warningFreeze = rng.next() < CONFIG.npcWarningFreezeChance;
+        this.warningScale = rng.range(...CONFIG.npcWarningSpeedScaleRange);
       }
     }
 
-    update(dt, lightState, lightElapsed, elapsedTime) {
+    update(dt, lightState, lightElapsed, elapsedTime, rng) {
       if (!this.isActive) return;
 
       let desiredSpeed = 0;
@@ -965,7 +1364,7 @@
         const stillReacting = lightElapsed < this.redReactionDelay;
         const panicking = lightElapsed < this.redPanicTime;
         if (stillReacting || panicking) {
-          desiredSpeed = this.speed * randRange(...CONFIG.npcRedPanicSpeedScaleRange);
+          desiredSpeed = this.speed * this.redPanicScale;
         }
       }
 
@@ -974,7 +1373,7 @@
         return;
       }
 
-      const stopJitter = lightState === LIGHT_STATES.red ? randRange(...CONFIG.npcStopJitterRange) : 0;
+      const stopJitter = lightState === LIGHT_STATES.red ? this.redStopJitter : 0;
       this.vx = desiredSpeed * (1 - stopJitter);
       this.x += this.vx * dt;
       this.bob += dt * (this.vx > 0 ? 11 : 4) + this.seedOffset * 0.0001;
@@ -993,11 +1392,14 @@
   class LightController {
     constructor(audio) {
       this.audio = audio;
+      this.difficulty = DIFFICULTIES.standard;
+      this.heat = HEAT_DEFINITIONS[0];
+      this.rng = new SeededRng(this.heat.seed ^ this.difficulty.seedSalt);
       this.state = LIGHT_STATES.green;
       this.elapsed = 0;
       this.phaseCount = 0;
-      this.songSpeed = CONFIG.songSpeedStart;
-      this.warningDuration = CONFIG.warningDuration;
+      this.songSpeed = this.difficulty.songSpeedStart;
+      this.warningDuration = this.difficulty.warningDuration;
       this.duration = this.greenDuration();
     }
 
@@ -1011,16 +1413,19 @@
       return Math.max(CONFIG.greenMinDuration, this.chantDuration() - this.warningDuration);
     }
 
-    reset() {
+    reset(difficulty = DIFFICULTIES.standard, heat = HEAT_DEFINITIONS[0], rng = null, playAudio = true) {
+      this.difficulty = difficulty;
+      this.heat = heat;
+      this.rng = rng || new SeededRng(heat.seed ^ difficulty.seedSalt);
       this.state = LIGHT_STATES.green;
       this.elapsed = 0;
       this.phaseCount = 0;
       // First green light of the run: chant starts slow, then climbs each round.
-      this.songSpeed = CONFIG.songSpeedStart;
-      this.warningDuration = CONFIG.warningDuration;
+      this.songSpeed = difficulty.songSpeedStart;
+      this.warningDuration = difficulty.warningDuration;
       this.duration = this.greenDuration();
       this.audio.setSongRate(this.songSpeed);
-      this.audio.restartSong();
+      if (playAudio) this.audio.restartSong();
     }
 
     update(dt, game) {
@@ -1037,6 +1442,7 @@
     }
 
     setState(nextState, game) {
+      const previousState = this.state;
       this.state = nextState;
       this.elapsed = 0;
       this.phaseCount += 1;
@@ -1044,8 +1450,9 @@
       if (nextState === LIGHT_STATES.green) {
         // Speed the chant up a notch and restart the phrase for the new round.
         // Green is sized so green + warning == the new (shorter) chant length.
-        this.songSpeed = Math.min(CONFIG.songSpeedMax, this.songSpeed + CONFIG.songSpeedStep);
-        this.warningDuration = CONFIG.warningDuration;
+        const speedStep = this.difficulty.songSpeedStep + this.heat.songStepBonus;
+        this.songSpeed = Math.min(this.difficulty.songSpeedMax, this.songSpeed + speedStep);
+        this.warningDuration = this.difficulty.warningDuration;
         this.duration = this.greenDuration();
         this.audio.setSongRate(this.songSpeed);
         this.audio.restartSong();
@@ -1054,17 +1461,395 @@
         this.duration = this.warningDuration;
       } else {
         // Doll has turned: the chant has just ended; hold a silent danger window.
-        this.duration = randRange(...CONFIG.redDurationRange);
+        this.duration = this.rng.range(...CONFIG.redDurationRange);
         game.player.markRedStart();
         this.audio.pauseSong();
       }
 
       for (const npc of game.npcs) {
-        npc.onNewLight(nextState);
+        npc.onNewLight(nextState, this.rng);
       }
+
+      game.onLightStateChanged(previousState, nextState);
 
       this.audio.phaseCue(nextState);
       game.announce(`${PHASE_LABELS[nextState]}.`);
+    }
+  }
+
+  /* -------------------------------------------------------------------------
+     Momentum Protocol Systems
+  ------------------------------------------------------------------------- */
+
+  class SaveStore {
+    constructor(key = SAVE_KEY) {
+      this.key = key;
+      this.available = true;
+      this.data = this.load();
+    }
+
+    freshData() {
+      const difficulties = {};
+      Object.keys(DIFFICULTIES).forEach((id) => {
+        difficulties[id] = {
+          bestChampionshipScore: 0,
+          bestMedal: 'none',
+          heats: HEAT_DEFINITIONS.map(() => ({ bestScore: 0, bestTime: null, bestGateChain: 0 }))
+        };
+      });
+      return { version: 1, selectedDifficulty: 'standard', difficulties };
+    }
+
+    load() {
+      const fallback = this.freshData();
+      try {
+        const raw = window.localStorage.getItem(this.key);
+        if (!raw) return fallback;
+        const parsed = JSON.parse(raw);
+        if (!parsed || parsed.version !== 1 || !parsed.difficulties) return fallback;
+        Object.keys(DIFFICULTIES).forEach((id) => {
+          const saved = parsed.difficulties[id] || {};
+          fallback.difficulties[id].bestChampionshipScore = Number(saved.bestChampionshipScore) || 0;
+          fallback.difficulties[id].bestMedal = ['bronze', 'silver', 'gold'].includes(saved.bestMedal)
+            ? saved.bestMedal
+            : 'none';
+          const heatRecords = Array.isArray(saved.heats) ? saved.heats : [];
+          fallback.difficulties[id].heats.forEach((record, index) => {
+            const heat = heatRecords[index] || {};
+            record.bestScore = Number(heat.bestScore) || 0;
+            record.bestTime = heat.bestTime !== null && Number.isFinite(Number(heat.bestTime))
+              ? Number(heat.bestTime)
+              : null;
+            record.bestGateChain = Number(heat.bestGateChain) || 0;
+          });
+        });
+        fallback.selectedDifficulty = DIFFICULTIES[parsed.selectedDifficulty]
+          ? parsed.selectedDifficulty
+          : 'standard';
+        return fallback;
+      } catch (error) {
+        this.available = false;
+        return fallback;
+      }
+    }
+
+    save() {
+      if (!this.available) return false;
+      try {
+        window.localStorage.setItem(this.key, JSON.stringify(this.data));
+        return true;
+      } catch (error) {
+        this.available = false;
+        return false;
+      }
+    }
+
+    getDifficulty(id) {
+      return this.data.difficulties[id] || this.data.difficulties.standard;
+    }
+
+    selectDifficulty(id) {
+      if (!DIFFICULTIES[id]) return;
+      this.data.selectedDifficulty = id;
+      this.save();
+    }
+
+    recordChampionship(difficultyId, score, medal, heatResults) {
+      const record = this.getDifficulty(difficultyId);
+      const medalRank = { none: 0, bronze: 1, silver: 2, gold: 3 };
+      const flags = {
+        championship: score > record.bestChampionshipScore,
+        medal: medalRank[medal] > medalRank[record.bestMedal],
+        heats: []
+      };
+      record.bestChampionshipScore = Math.max(record.bestChampionshipScore, score);
+      if (flags.medal) record.bestMedal = medal;
+      heatResults.forEach((result, index) => {
+        const heatRecord = record.heats[index];
+        const heatFlags = {
+          score: result.score > heatRecord.bestScore,
+          time: result.completed && (heatRecord.bestTime === null || result.elapsedTime < heatRecord.bestTime),
+          chain: result.bestGateChain > heatRecord.bestGateChain
+        };
+        heatRecord.bestScore = Math.max(heatRecord.bestScore, result.score);
+        if (heatFlags.time) heatRecord.bestTime = result.elapsedTime;
+        heatRecord.bestGateChain = Math.max(heatRecord.bestGateChain, result.bestGateChain);
+        flags.heats.push(heatFlags);
+      });
+      this.save();
+      return flags;
+    }
+  }
+
+  class ChampionshipController {
+    constructor(store) {
+      this.store = store;
+      this.difficultyId = store.data.selectedDifficulty;
+      this.heatIndex = 0;
+      this.results = [];
+      this.finalScore = 0;
+      this.medal = 'none';
+      this.recordFlags = null;
+    }
+
+    start(difficultyId) {
+      this.difficultyId = DIFFICULTIES[difficultyId] ? difficultyId : 'standard';
+      this.store.selectDifficulty(this.difficultyId);
+      this.heatIndex = 0;
+      this.results = [];
+      this.finalScore = 0;
+      this.medal = 'none';
+      this.recordFlags = null;
+    }
+
+    get difficulty() {
+      return DIFFICULTIES[this.difficultyId];
+    }
+
+    get heat() {
+      return HEAT_DEFINITIONS[this.heatIndex];
+    }
+
+    addResult(result) {
+      this.results.push(result);
+    }
+
+    get totalScore() {
+      return this.results.reduce((sum, result) => sum + result.score, 0);
+    }
+
+    get isLastHeat() {
+      return this.heatIndex >= HEAT_DEFINITIONS.length - 1;
+    }
+
+    advance() {
+      if (!this.isLastHeat) this.heatIndex += 1;
+    }
+
+    finish() {
+      this.finalScore = this.totalScore;
+      const allCompleted = this.results.length === HEAT_DEFINITIONS.length
+        && this.results.every((result) => result.completed);
+      this.medal = ScoreManager.medalFor(this.finalScore, allCompleted);
+      this.recordFlags = this.store.recordChampionship(
+        this.difficultyId,
+        this.finalScore,
+        this.medal,
+        this.results
+      );
+      return { score: this.finalScore, medal: this.medal, allCompleted, recordFlags: this.recordFlags };
+    }
+  }
+
+  class ScoreManager {
+    constructor() {
+      this.reset(HEAT_DEFINITIONS[0]);
+    }
+
+    reset(heat) {
+      this.heat = heat;
+      this.redPhases = 0;
+      this.safeStops = 0;
+      this.perfectStops = 0;
+      this.gateRawScore = 0;
+      this.gateHits = 0;
+      this.gatePerfects = 0;
+      this.gateMisses = 0;
+      this.gateChain = 0;
+      this.bestGateChain = 0;
+      this.lastGateResult = null;
+    }
+
+    recordRedStart(speed) {
+      this.redPhases += 1;
+      if (speed <= CONFIG.perfectStopSpeed) this.perfectStops += 1;
+    }
+
+    recordSafeRed() {
+      this.safeStops += 1;
+    }
+
+    recordGate(quality) {
+      if (quality === 'miss') {
+        this.gateMisses += 1;
+        this.gateChain = 0;
+        this.lastGateResult = { quality, points: 0, multiplier: 1 };
+        return this.lastGateResult;
+      }
+      const multiplier = Math.min(
+        SCORE_RULES.gateChainMax,
+        1 + this.gateChain * SCORE_RULES.gateChainStep
+      );
+      const base = quality === 'perfect' ? SCORE_RULES.gatePerfect : SCORE_RULES.gateGood;
+      const points = Math.round(base * multiplier);
+      this.gateChain += 1;
+      this.bestGateChain = Math.max(this.bestGateChain, this.gateChain);
+      this.gateHits += 1;
+      if (quality === 'perfect') this.gatePerfects += 1;
+      this.gateRawScore += points;
+      this.lastGateResult = { quality, points, multiplier };
+      return this.lastGateResult;
+    }
+
+    currentMultiplier() {
+      return Math.min(SCORE_RULES.gateChainMax, 1 + this.gateChain * SCORE_RULES.gateChainStep);
+    }
+
+    finalize(game, completed, failureReason) {
+      const progressRatio = clamp(
+        (game.player.x - CONFIG.startX) / (CONFIG.finishX - CONFIG.startX),
+        0,
+        1
+      );
+      const timeRatio = clamp(game.timeRemaining / Math.max(1, game.heatTimeLimit), 0, 1);
+      const safeRatio = this.redPhases > 0 ? clamp(this.safeStops / this.redPhases, 0, 1) : 0;
+      const perfectRatio = this.redPhases > 0 ? clamp(this.perfectStops / this.redPhases, 0, 1) : 0;
+      const gateTarget = Math.max(1, this.heat.gateXs.length * SCORE_RULES.gatePerfect * 1.5);
+      const gateRatio = clamp(this.gateRawScore / gateTarget, 0, 1);
+      const categories = {
+        progress: Math.round(progressRatio * 1000),
+        completion: 0,
+        time: 0,
+        stops: 0,
+        gates: 0,
+        placement: 0,
+        failurePenalty: 0
+      };
+
+      let placement = null;
+      if (this.heat.scoreProfile === 'brake') {
+        if (completed) {
+          categories.completion = 2500;
+          categories.time = Math.round(timeRatio * 1500);
+        }
+        categories.stops = Math.round(perfectRatio * 3500 + safeRatio * 1500);
+      } else if (this.heat.scoreProfile === 'gates') {
+        if (completed) {
+          categories.completion = 2000;
+          categories.time = Math.round(timeRatio * 1000);
+        }
+        categories.gates = Math.round(gateRatio * 5000);
+        categories.stops = Math.round(safeRatio * 1000);
+      } else {
+        if (completed) {
+          categories.completion = 2000;
+          categories.time = Math.round(timeRatio * 1000);
+          placement = 1 + game.npcs.filter((npc) => npc.finishTime !== null && npc.finishTime <= game.elapsedTime).length;
+          categories.placement = placement === 1 ? 2000 : placement <= 3 ? 1600 : placement <= 6 ? 1200 : 700;
+        }
+        categories.gates = Math.round(gateRatio * 3000);
+        categories.stops = Math.round(safeRatio * 1000);
+      }
+
+      // A failed heat preserves skill demonstrated on the part of the course the
+      // player actually attempted. Waiting safely at START cannot farm stop score.
+      if (!completed) {
+        categories.stops = Math.round(categories.stops * progressRatio);
+      }
+
+      let score = Object.values(categories).reduce((sum, value) => sum + value, 0);
+      if (!completed && score > SCORE_RULES.failedHeatCap) {
+        categories.failurePenalty = SCORE_RULES.failedHeatCap - score;
+        score = SCORE_RULES.failedHeatCap;
+      }
+      score = clamp(Math.round(score), 0, SCORE_RULES.maxHeatScore);
+
+      return {
+        heatId: this.heat.id,
+        title: this.heat.title,
+        completed,
+        failureReason: completed ? null : failureReason,
+        score,
+        categories,
+        elapsedTime: game.elapsedTime,
+        timeRemaining: game.timeRemaining,
+        progressRatio,
+        placement,
+        redPhases: this.redPhases,
+        safeStops: this.safeStops,
+        perfectStops: this.perfectStops,
+        gateHits: this.gateHits,
+        gatePerfects: this.gatePerfects,
+        gateMisses: this.gateMisses,
+        bestGateChain: this.bestGateChain
+      };
+    }
+
+    static medalFor(score, allCompleted) {
+      if (allCompleted && score >= SCORE_RULES.medals.gold) return 'gold';
+      if (score >= SCORE_RULES.medals.silver) return 'silver';
+      if (score >= SCORE_RULES.medals.bronze) return 'bronze';
+      return 'none';
+    }
+  }
+
+  class GateSystem {
+    constructor() {
+      this.heat = HEAT_DEFINITIONS[0];
+      this.difficulty = DIFFICULTIES.standard;
+      this.banks = [];
+      this.previousPlayerX = CONFIG.startX;
+    }
+
+    reset(heat, difficulty) {
+      this.heat = heat;
+      this.difficulty = difficulty;
+      this.previousPlayerX = CONFIG.startX;
+      const rng = new SeededRng(heat.seed ^ difficulty.seedSalt ^ 0x9e3779b9);
+      this.banks = heat.gateXs.map((x, index) => {
+        const rotation = rng.next();
+        return {
+          index,
+          x,
+          processed: false,
+          selectedLane: null,
+          result: null,
+          offsets: VISUALS.laneYs.map((_, lane) => (rotation + lane / VISUALS.laneYs.length + index * 0.071) % 1)
+        };
+      });
+    }
+
+    pulseAt(bank, lane, elapsedTime) {
+      const raw = (elapsedTime / this.difficulty.gatePeriod + bank.offsets[lane]) % 1;
+      const phase = raw < 0 ? raw + 1 : raw;
+      const distance = Math.min(phase, 1 - phase);
+      let quality = 'miss';
+      if (distance <= this.difficulty.gatePerfectWindow * 0.5) quality = 'perfect';
+      else if (distance <= this.difficulty.gateGoodWindow * 0.5) quality = 'good';
+      return { phase, distance, strength: 1 - distance * 2, quality };
+    }
+
+    nearestLane(y) {
+      let bestLane = 0;
+      let bestDistance = Infinity;
+      VISUALS.laneYs.forEach((laneY, index) => {
+        const distance = Math.abs(y - laneY);
+        if (distance < bestDistance) {
+          bestDistance = distance;
+          bestLane = index;
+        }
+      });
+      return bestLane;
+    }
+
+    update(game) {
+      if (!this.banks.length) return;
+      for (const bank of this.banks) {
+        if (bank.processed) continue;
+        if (this.previousPlayerX < bank.x && game.player.x >= bank.x) {
+          const lane = this.nearestLane(game.player.y);
+          const pulse = this.pulseAt(bank, lane, game.elapsedTime);
+          const quality = game.light.state === LIGHT_STATES.red ? 'miss' : pulse.quality;
+          const result = game.score.recordGate(quality);
+          bank.processed = true;
+          bank.selectedLane = lane;
+          bank.result = result;
+          game.announce(quality === 'miss'
+            ? 'Pulse gate missed. Chain reset.'
+            : `${quality === 'perfect' ? 'Perfect' : 'Good'} gate. ${result.points} points.`);
+        }
+      }
+      this.previousPlayerX = game.player.x;
     }
   }
 
@@ -1621,6 +2406,7 @@
       this.drawFieldMarkings(ctx);
       this.drawTrackMarkers(ctx, game);
       this.drawFinishLine(ctx, game);
+      this.drawGateBanks(ctx, game);
       this.drawEliminated(ctx, game);
       this.drawNpcs(ctx, game);
       this.drawPlayer(ctx, game.player, game);
@@ -1852,17 +2638,18 @@
         texture.width = 256;
         texture.height = 256;
         const tctx = texture.getContext('2d');
+        const textureRng = new SeededRng(0x54455854);
         tctx.fillStyle = style.base;
         tctx.fillRect(0, 0, 256, 256);
         for (let i = 0; i < 1100; i += 1) {
-          const px = randInt(0, 255);
-          const py = randInt(0, 255);
+          const px = textureRng.int(0, 255);
+          const py = textureRng.int(0, 255);
           tctx.fillStyle = style.grainDark;
           tctx.fillRect(px, py, 2, 2);
         }
         for (let i = 0; i < 420; i += 1) {
-          const px = randInt(0, 255);
-          const py = randInt(0, 255);
+          const px = textureRng.int(0, 255);
+          const py = textureRng.int(0, 255);
           tctx.fillStyle = style.grainLight;
           tctx.fillRect(px, py, 1, 1);
         }
@@ -1949,6 +2736,54 @@
       ctx.strokeRect(x, y, width, height);
     }
 
+    drawGateBanks(ctx, game) {
+      if (!game.gates || !game.gates.banks.length) return;
+      const topLaneY = VISUALS.laneYs[0];
+      for (const bank of game.gates.banks) {
+        const screenX = bank.x - this.cameraX;
+        if (screenX < -50 || screenX > CONFIG.width + 50) continue;
+
+        ctx.textAlign = 'center';
+        ctx.font = '800 11px system-ui, sans-serif';
+        ctx.fillStyle = bank.processed ? 'rgba(220,232,238,0.38)' : 'rgba(218,235,249,0.9)';
+        ctx.fillText(`PULSE ${bank.index + 1}`, screenX, topLaneY - 34);
+
+        VISUALS.laneYs.forEach((laneY, lane) => {
+          const pulse = game.gates.pulseAt(bank, lane, game.elapsedTime);
+          let color = '121,169,216';
+          let alpha = 0.2 + pulse.strength * 0.38;
+          let width = 4 + pulse.strength * 5;
+          if (pulse.quality === 'good') color = '111,227,154';
+          if (pulse.quality === 'perfect') color = '255,224,122';
+          if (bank.processed) {
+            const selected = bank.selectedLane === lane;
+            color = selected && bank.result && bank.result.quality === 'perfect'
+              ? '255,224,122'
+              : selected && bank.result && bank.result.quality === 'good'
+                ? '111,227,154'
+                : '126,140,151';
+            alpha = selected ? 0.78 : 0.12;
+            width = selected ? 8 : 3;
+          }
+
+          ctx.fillStyle = `rgba(${color}, ${alpha})`;
+          drawRoundedRect(ctx, screenX - width * 0.5, laneY - 22, width, 44, width * 0.5);
+          ctx.fill();
+          ctx.strokeStyle = `rgba(${color}, ${Math.min(1, alpha + 0.24)})`;
+          ctx.lineWidth = 2;
+          ctx.beginPath();
+          ctx.moveTo(screenX - 13, laneY - 17);
+          ctx.lineTo(screenX - 19, laneY);
+          ctx.lineTo(screenX - 13, laneY + 17);
+          ctx.moveTo(screenX + 13, laneY - 17);
+          ctx.lineTo(screenX + 19, laneY);
+          ctx.lineTo(screenX + 13, laneY + 17);
+          ctx.stroke();
+        });
+        ctx.textAlign = 'left';
+      }
+    }
+
     drawNpcs(ctx, game) {
       const activeNpcs = game.npcs
         .filter((npc) => npc.state !== ENTITY_STATES.eliminated)
@@ -1979,10 +2814,10 @@
     drawRunner(ctx, entity, isPlayer, lightState, game) {
       const eliminated = entity.state === ENTITY_STATES.eliminated;
       const finished = entity.state === ENTITY_STATES.finished;
-      const moving = entity.vx > 1;
+      const moving = Math.hypot(entity.vx, entity.vy || 0) > 1;
       // 0..1 "is running" amount drives stride length, knee bend and lean so the
       // body settles smoothly into a standing pose when stopped on red.
-      const runAmt = clamp(entity.vx / 130, 0, 1);
+      const runAmt = clamp(Math.hypot(entity.vx, entity.vy || 0) / 130, 0, 1);
       const bob = Math.sin(entity.bob) * (moving ? 3 : 1);
       // World -> screen: runners live in world space; subtract the camera.
       const x = entity.x - this.cameraX;
@@ -2043,7 +2878,7 @@
 
       if (usingNpcSheet) {
         const row = clamp(entity.visual && Number.isInteger(entity.visual.spriteRow) ? entity.visual.spriteRow : 0, 0, sheet.layout.rows - 1);
-        const moving = entity.vx > 1.5;
+        const moving = Math.hypot(entity.vx, entity.vy || 0) > 1.5;
         frame = { col: moving ? runStep : 8, row };
         if (eliminated) {
           frame = { col: 8, row };
@@ -2059,7 +2894,7 @@
           frame = { col: 0, row: 1 };
           rotation = -0.68;
           alpha = 0.52;
-        } else if (entity.vx > 1.5) {
+        } else if (Math.hypot(entity.vx, entity.vy || 0) > 1.5) {
           frame = { col: runStep, row: 0 };
         } else if (lightState === LIGHT_STATES.red || lightState === LIGHT_STATES.warning) {
           frame = { col: 0, row: 2 };
@@ -2412,6 +3247,10 @@
     drawHud(ctx, game) {
       const phase = game.light.state;
       const phaseColor = PHASE_COLORS[phase];
+      const difficulty = game.championship.difficulty;
+      const heatNumber = game.championship.heatIndex + 1;
+      const speedRatio = clamp(game.player.vx / CONFIG.playerSpeed, 0, 1);
+      const liveScore = game.championship.totalScore + game.liveHeatScore();
       ctx.fillStyle = 'rgba(11, 17, 24, 0.78)';
       ctx.fillRect(0, 0, CONFIG.width, CONFIG.hudHeight);
       ctx.strokeStyle = 'rgba(238,245,248,0.2)';
@@ -2421,11 +3260,25 @@
       ctx.stroke();
 
       ctx.fillStyle = '#eef5f8';
-      ctx.font = '800 24px system-ui, sans-serif';
-      ctx.fillText('Flightline Sprint', 28, 34);
-      ctx.font = '600 15px system-ui, sans-serif';
+      ctx.font = '850 22px system-ui, sans-serif';
+      ctx.fillText('Momentum Protocol', 24, 31);
+      ctx.font = '750 13px system-ui, sans-serif';
       ctx.fillStyle = '#aebdc6';
-      ctx.fillText('Hold D or ArrowRight. Stop on red.', 28, 58);
+      ctx.fillText(`HEAT ${heatNumber}/3  •  ${difficulty.shortLabel}`, 24, 55);
+
+      ctx.fillStyle = '#8ea4b2';
+      ctx.font = '750 11px system-ui, sans-serif';
+      ctx.fillText('SPEED', 270, 27);
+      ctx.fillStyle = 'rgba(238,245,248,0.12)';
+      drawRoundedRect(ctx, 270, 38, 128, 13, 7);
+      ctx.fill();
+      const speedColor = speedRatio > 0.82 ? '#ffd15c' : '#79a9d8';
+      ctx.fillStyle = speedColor;
+      drawRoundedRect(ctx, 270, 38, 128 * speedRatio, 13, 7);
+      ctx.fill();
+      ctx.fillStyle = '#c8d7e1';
+      ctx.font = '700 11px ui-monospace, SFMono-Regular, Menlo, monospace';
+      ctx.fillText(`${Math.round(game.player.vx)}`, 405, 49);
 
       ctx.fillStyle = 'rgba(238,245,248,0.09)';
       drawRoundedRect(ctx, CONFIG.lightX - 154, 18, 308, 48, 8);
@@ -2444,23 +3297,21 @@
       ctx.fillText(PHASE_LABELS[phase], CONFIG.lightX + 24, 51);
       ctx.textAlign = 'left';
 
-      const timeColor = game.timeRemaining <= 10 ? '#ffb0ab' : '#eef5f8';
+      const chain = game.score.currentMultiplier();
       ctx.fillStyle = '#aebdc6';
-      ctx.font = '700 14px system-ui, sans-serif';
-      ctx.fillText('TIME', 1030, 28);
-      ctx.fillStyle = timeColor;
-      ctx.font = '900 32px ui-monospace, SFMono-Regular, Menlo, monospace';
-      ctx.fillText(formatTime(game.timeRemaining), 1030, 61);
-
-      ctx.fillStyle = '#aebdc6';
-      ctx.font = '700 14px system-ui, sans-serif';
-      ctx.fillText('FIN', 1154, 28);
-      ctx.fillText('OUT', 1218, 28);
+      ctx.font = '750 11px system-ui, sans-serif';
+      ctx.fillText('CHAIN', 854, 25);
+      ctx.fillText('SCORE', 954, 25);
+      ctx.fillText('TIME', 1148, 25);
+      ctx.fillStyle = game.score.gateChain > 0 ? '#6fe39a' : '#8498a4';
+      ctx.font = '850 19px ui-monospace, SFMono-Regular, Menlo, monospace';
+      ctx.fillText(`${chain.toFixed(2)}×`, 854, 54);
       ctx.fillStyle = '#eef5f8';
-      ctx.font = '900 23px ui-monospace, SFMono-Regular, Menlo, monospace';
-      ctx.fillText(`${game.countNpcs('finished')}`, 1154, 58);
-      ctx.fillStyle = '#ffb0ab';
-      ctx.fillText(`${game.countNpcs('eliminated')}`, 1218, 58);
+      ctx.font = '900 25px ui-monospace, SFMono-Regular, Menlo, monospace';
+      ctx.fillText(String(liveScore).padStart(5, '0'), 954, 56);
+      ctx.fillStyle = game.timeRemaining <= 10 ? '#ffb0ab' : '#eef5f8';
+      ctx.font = '900 28px ui-monospace, SFMono-Regular, Menlo, monospace';
+      ctx.fillText(formatTime(game.timeRemaining), 1148, 57);
     }
 
     // Full-screen color pop on win/loss - drama on top of the frozen scene.
@@ -2484,86 +3335,16 @@
     }
 
     drawStateOverlay(ctx, game) {
-      if (game.state === GAME_STATES.playing) return;
-
-      const isTitle = game.state === GAME_STATES.title;
-      const overlayAlpha = isTitle ? 0.66 : 0.72;
-      ctx.fillStyle = `rgba(8, 12, 18, ${overlayAlpha})`;
+      if (game.state !== GAME_STATES.paused) return;
+      ctx.fillStyle = 'rgba(8, 12, 18, 0.56)';
       ctx.fillRect(0, CONFIG.hudHeight, CONFIG.width, CONFIG.height - CONFIG.hudHeight);
-
       ctx.textAlign = 'center';
-
-      let heading = 'Flightline Sprint';
-      let body = 'USAF-inspired Red Light / Green Light MVP';
-      let accent = '#eef5f8';
-      let big = false;
-      if (game.state === GAME_STATES.paused) {
-        heading = 'Paused';
-        body = 'Press P to resume.';
-      } else if (game.state === GAME_STATES.won) {
-        heading = 'YOU SURVIVED';
-        body = `Across the line with ${formatTime(game.timeRemaining)}s to spare.`;
-        accent = '#ffe07a';
-        big = true;
-      } else if (game.state === GAME_STATES.lost) {
-        if (game.failureReason === FAILURE_REASONS.timeout) {
-          heading = "TIME'S UP";
-          body = 'The clock hit zero before the finish line.';
-          accent = '#ffb347';
-        } else {
-          heading = 'ELIMINATED';
-          body = 'You moved on red. The guard caught you.';
-          accent = '#ff5147';
-        }
-        big = true;
-      }
-
-      // Dramatic heading: accent color, glow, and a brief pop scale from fx.
-      const pop = game.fx && big && !this.prefersReducedMotion
-        ? 1 + Math.max(0, 0.16 * (1 - game.fx.t / 0.4))
-        : 1;
-      withSavedContext(ctx, () => {
-        ctx.translate(CONFIG.width / 2, 240);
-        ctx.scale(pop, pop);
-        ctx.font = `900 ${big ? 70 : 48}px system-ui, sans-serif`;
-        ctx.shadowColor = accent;
-        ctx.shadowBlur = big ? 26 : 0;
-        ctx.fillStyle = accent;
-        ctx.fillText(heading, 0, 0);
-        ctx.shadowBlur = 0;
-      });
-      if (big) {
-        // Accent underline.
-        ctx.fillStyle = accent;
-        ctx.fillRect(CONFIG.width / 2 - 130, 262, 260, 4);
-      }
+      ctx.font = '900 54px system-ui, sans-serif';
+      ctx.fillStyle = '#eef5f8';
+      ctx.fillText('PAUSED', CONFIG.width / 2, 274);
       ctx.font = '600 22px system-ui, sans-serif';
       ctx.fillStyle = '#c9d7df';
-      ctx.fillText(body, CONFIG.width / 2, 300);
-
-      const lines = isTitle
-        ? [
-          'Space or Enter starts',
-          'Hold D or ArrowRight to sprint right',
-          'P pauses, M toggles sound, F1 or ` toggles debug'
-        ]
-        : [
-          'Space or Enter restarts',
-          'F1 or ` toggles debug'
-        ];
-
-      ctx.font = '700 21px system-ui, sans-serif';
-      lines.forEach((line, index) => {
-        ctx.fillStyle = index === 0 ? '#ffffff' : '#aebdc6';
-        ctx.fillText(line, CONFIG.width / 2, 352 + index * 34);
-      });
-
-      if (isTitle) {
-        ctx.font = '600 13px system-ui, sans-serif';
-        ctx.fillStyle = 'rgba(201, 215, 223, 0.76)';
-        ctx.fillText('Unofficial USAF-inspired prototype. GPL-3.0-or-later. No USAF/DoD endorsement implied.', CONFIG.width / 2, 642);
-      }
-
+      ctx.fillText('Press P or use Resume to continue.', CONFIG.width / 2, 316);
       ctx.textAlign = 'left';
     }
 
@@ -2574,11 +3355,14 @@
       const lines = [
         `FPS: ${game.debug.fps.toFixed(0)}`,
         `game: ${game.state}`,
+        `difficulty/heat/seed: ${game.championship.difficultyId} / ${game.championship.heatIndex + 1} / ${game.currentSeed >>> 0}`,
         `light: ${game.light.state}`,
         `light timer: ${game.light.elapsed.toFixed(2)} / ${game.light.duration.toFixed(2)}`,
         `game timer: ${game.timeRemaining.toFixed(2)}`,
-        `player x/v/state: ${game.player.x.toFixed(1)} / ${game.player.vx.toFixed(1)} / ${game.player.state}`,
+        `player x/y/vx/vy: ${game.player.x.toFixed(1)} / ${game.player.y.toFixed(1)} / ${game.player.vx.toFixed(1)} / ${game.player.vy.toFixed(1)}`,
+        `lane current/target: ${game.player.currentLane + 1} / ${game.player.targetLane + 1}`,
         `red drift: ${game.player.redDrift.toFixed(2)} / ${CONFIG.redMovementTolerance}`,
+        `score/chain: ${game.championship.totalScore + game.liveHeatScore()} / ${game.score.gateChain}`,
         `NPC alive/eliminated/finished: ${alive}/${eliminated}/${finished}`,
         `phase duration: ${game.light.duration.toFixed(2)}`,
         `audio: ${game.audio.enabled ? 'on' : 'off'}`
@@ -2623,11 +3407,213 @@
   }
 
   /* -------------------------------------------------------------------------
-     Game Class
+     UI Controller And Game
   ------------------------------------------------------------------------- */
 
+  class UIController {
+    constructor(game, overlay, panel, touchControls) {
+      this.game = game;
+      this.overlay = overlay;
+      this.panel = panel;
+      this.touchControls = touchControls;
+      this.recordsExpanded = false;
+      this.panel.addEventListener('click', (event) => this.onClick(event));
+      this.render();
+    }
+
+    onClick(event) {
+      const button = event.target.closest('button');
+      if (!button) return;
+      const difficultyId = button.dataset.difficulty;
+      if (difficultyId) {
+        this.game.selectDifficulty(difficultyId);
+        return;
+      }
+      const action = button.dataset.action;
+      if (action === 'play') this.game.startChampionship();
+      else if (action === 'begin-heat') this.game.beginHeat();
+      else if (action === 'next') this.game.advanceFromHeatResults();
+      else if (action === 'replay') this.game.startChampionship(this.game.selectedDifficultyId);
+      else if (action === 'title') this.game.returnToTitle();
+      else if (action === 'resume') this.game.togglePause();
+      else if (action === 'records') {
+        this.recordsExpanded = !this.recordsExpanded;
+        this.render();
+      }
+    }
+
+    formatScore(value) {
+      return Math.round(value).toLocaleString('en-US');
+    }
+
+    formatMedal(medal) {
+      return medal === 'none' ? 'No medal yet' : medal.toUpperCase();
+    }
+
+    recordMarkup(difficultyId) {
+      const record = this.game.store.getDifficulty(difficultyId);
+      const heatRows = record.heats.map((heat, index) => {
+        const time = heat.bestTime === null ? '—' : `${heat.bestTime.toFixed(1)}s`;
+        return `<div class="record-row"><span>Heat ${index + 1}</span><strong>${this.formatScore(heat.bestScore)} · ${time} · ×${heat.bestGateChain}</strong></div>`;
+      }).join('');
+      return `
+        <div class="record-grid">
+          <div class="record-row"><span>Best total</span><strong>${this.formatScore(record.bestChampionshipScore)}</strong></div>
+          <div class="record-row"><span>Best medal</span><strong>${this.formatMedal(record.bestMedal)}</strong></div>
+          ${this.recordsExpanded ? heatRows : ''}
+        </div>
+      `;
+    }
+
+    difficultyMarkup() {
+      return Object.values(DIFFICULTIES).map((difficulty) => `
+        <button
+          class="difficulty-button"
+          type="button"
+          data-difficulty="${difficulty.id}"
+          aria-pressed="${this.game.selectedDifficultyId === difficulty.id ? 'true' : 'false'}"
+        >${difficulty.label}</button>
+      `).join('');
+    }
+
+    resultRows(categories) {
+      const labels = {
+        progress: 'Track progress',
+        completion: 'Completion',
+        time: 'Time remaining',
+        stops: 'Stop precision',
+        gates: 'Pulse gates',
+        placement: 'Finish placement',
+        failurePenalty: 'Failure cap'
+      };
+      return Object.entries(categories)
+        .filter(([, value]) => value !== 0)
+        .map(([key, value]) => `
+          <div class="result-row"><span>${labels[key]}</span><strong>${value > 0 ? '+' : ''}${this.formatScore(value)}</strong></div>
+        `).join('');
+    }
+
+    renderTitle() {
+      const difficulty = DIFFICULTIES[this.game.selectedDifficultyId];
+      this.panel.innerHTML = `
+        <p class="menu-eyebrow">Flightline Sprint</p>
+        <h1>Momentum Protocol</h1>
+        <p class="menu-subtitle">Three-Heat Championship</p>
+        <p class="menu-copy">Build speed, carry momentum, brake before Red, and change lanes to strike pulsing score gates. Every heat counts—even a failed one.</p>
+        <div class="difficulty-picker" aria-label="Difficulty">
+          ${this.difficultyMarkup()}
+        </div>
+        ${this.recordMarkup(difficulty.id)}
+        <div class="menu-actions">
+          <button class="menu-button primary" type="button" data-action="play">Begin ${difficulty.label}</button>
+          <button class="menu-button" type="button" data-action="records">${this.recordsExpanded ? 'Hide' : 'Show'} Heat Records</button>
+        </div>
+        <p class="menu-note">Keyboard: hold D/→ to run, W/S or ↑/↓ to change lanes, P to pause, M to mute.</p>
+        <p class="legal-note">Unofficial USAF-inspired game. GPL-3.0-or-later. No USAF/DoD endorsement implied.</p>
+      `;
+    }
+
+    renderBriefing() {
+      const heat = this.game.championship.heat;
+      const difficulty = this.game.championship.difficulty;
+      const gateNote = heat.gateXs.length
+        ? `${heat.gateXs.length} pulse banks · Good 300 · Perfect 500 · misses reset the chain.`
+        : 'No pulse gates in this heat. Stop accuracy carries the score.';
+      this.panel.innerHTML = `
+        <p class="menu-eyebrow">${difficulty.label} · Heat ${heat.number} of 3</p>
+        <h1>${heat.title}</h1>
+        <p class="menu-copy">${heat.objective}</p>
+        <div class="result-grid">
+          <div class="result-row"><span>Time limit</span><strong>${this.game.heatTimeLimit.toFixed(0)}s</strong></div>
+          <div class="result-row"><span>Fixed trial seed</span><strong>${this.game.currentSeed >>> 0}</strong></div>
+        </div>
+        <p class="menu-note">${gateNote}</p>
+        <div class="menu-actions">
+          <button class="menu-button primary" type="button" data-action="begin-heat">Start Heat</button>
+          <button class="menu-button" type="button" data-action="title">Return to Title</button>
+        </div>
+      `;
+    }
+
+    renderHeatResults() {
+      const result = this.game.championship.results[this.game.championship.results.length - 1];
+      const outcome = result.completed
+        ? 'Heat Complete'
+        : result.failureReason === FAILURE_REASONS.timeout
+          ? "Time's Up"
+          : 'Caught Moving';
+      const accent = result.completed ? 'YOU SURVIVED' : 'THE CHAMPIONSHIP CONTINUES';
+      const nextLabel = this.game.championship.isLastHeat ? 'Championship Results' : 'Next Heat';
+      this.panel.innerHTML = `
+        <p class="menu-eyebrow">${accent}</p>
+        <h1>${outcome}</h1>
+        <p class="menu-subtitle">${result.title} · ${this.formatScore(result.score)} points</p>
+        <div class="result-grid">${this.resultRows(result.categories)}</div>
+        <p class="menu-note">${result.perfectStops}/${result.redPhases} perfect Red entries · ${result.gatePerfects} perfect gates · best chain ×${result.bestGateChain}</p>
+        <div class="menu-badge">Running Total ${this.formatScore(this.game.championship.totalScore)}</div>
+        <div class="menu-actions">
+          <button class="menu-button primary" type="button" data-action="next">${nextLabel}</button>
+          <button class="menu-button" type="button" data-action="title">End Championship</button>
+        </div>
+      `;
+    }
+
+    renderChampionshipResults() {
+      const championship = this.game.championship;
+      const resultRows = championship.results.map((result, index) => `
+        <div class="result-row">
+          <span>Heat ${index + 1} · ${result.completed ? 'Clear' : 'Failed'}</span>
+          <strong>${this.formatScore(result.score)}</strong>
+        </div>
+      `).join('');
+      const recordText = championship.recordFlags && championship.recordFlags.championship
+        ? '<p class="new-record">New championship record</p>'
+        : '';
+      this.panel.innerHTML = `
+        <p class="menu-eyebrow">${championship.difficulty.label} Championship</p>
+        <h1>${this.formatMedal(championship.medal)}</h1>
+        <p class="menu-subtitle">${this.formatScore(championship.finalScore)} total points</p>
+        ${recordText}
+        <div class="result-grid">${resultRows}</div>
+        <p class="menu-note">Gold requires 25,000 points and three cleared heats. Bronze begins at 12,000; Silver at 20,000.</p>
+        <div class="menu-actions">
+          <button class="menu-button primary" type="button" data-action="replay">Replay Championship</button>
+          <button class="menu-button" type="button" data-action="title">Return to Title</button>
+        </div>
+      `;
+    }
+
+    renderPaused() {
+      this.panel.innerHTML = `
+        <p class="menu-eyebrow">Momentum Protocol</p>
+        <h1>Paused</h1>
+        <p class="menu-copy">Your signal, gate pulse, and championship clock are frozen.</p>
+        <div class="menu-actions">
+          <button class="menu-button primary" type="button" data-action="resume">Resume</button>
+          <button class="menu-button" type="button" data-action="title">End Championship</button>
+        </div>
+      `;
+    }
+
+    render() {
+      const state = this.game.state;
+      const playing = state === GAME_STATES.playing;
+      this.overlay.hidden = playing;
+      if (this.touchControls) {
+        if (playing) this.touchControls.setAttribute('data-playing', '');
+        else this.touchControls.removeAttribute('data-playing');
+      }
+      if (playing) return;
+      if (state === GAME_STATES.title) this.renderTitle();
+      else if (state === GAME_STATES.heatBriefing) this.renderBriefing();
+      else if (state === GAME_STATES.heatResults) this.renderHeatResults();
+      else if (state === GAME_STATES.championshipResults) this.renderChampionshipResults();
+      else if (state === GAME_STATES.paused) this.renderPaused();
+    }
+  }
+
   class Game {
-    constructor(canvas, statusNode) {
+    constructor(canvas, statusNode, overlay, panel, touchControls) {
       this.canvas = canvas;
       this.statusNode = statusNode;
       this.renderer = new Renderer(canvas);
@@ -2637,57 +3623,165 @@
       this.debug = new DebugStats();
       this.player = new Player();
       this.npcs = [];
+      this.laneYs = VISUALS.laneYs.slice();
+      this.store = new SaveStore();
+      this.championship = new ChampionshipController(this.store);
+      this.selectedDifficultyId = this.store.data.selectedDifficulty;
+      this.championship.difficultyId = this.selectedDifficultyId;
+      this.score = new ScoreManager();
+      this.gates = new GateSystem();
       this.state = GAME_STATES.title;
-      this.previousState = GAME_STATES.title;
       this.failureReason = null;
-      this.fx = null;            // win/lose screen effect: { type, t }
+      this.fx = null;
       this.timeRemaining = CONFIG.timeLimit;
+      this.heatTimeLimit = CONFIG.timeLimit;
       this.elapsedTime = 0;
       this.lastTimestamp = 0;
-      this.laneYs = VISUALS.laneYs.slice();
+      this.currentSeed = 0;
+      this.rng = new SeededRng(1);
+      this.heatEnded = false;
 
-      this.createNpcs();
-      this.announce('Title screen. Press Space or Enter to start.');
+      this.prepareHeat(false);
+      this.ui = new UIController(this, overlay, panel, touchControls);
+      this.announce('Momentum Protocol title screen. Select a difficulty and begin.');
       this.syncQaState();
       requestAnimationFrame((timestamp) => this.loop(timestamp));
     }
 
-    createNpcs() {
-      this.npcs.length = 0;
-      for (let i = 0; i < CONFIG.npcCount; i += 1) {
-        const npcLaneCount = this.laneYs.length - 1;
-        const laneGroup = Math.floor(i / npcLaneCount);
-        const laneOffset = [-8, 8, 0][laneGroup] || 0;
-        const laneY = this.laneYs[i % npcLaneCount] + laneOffset + randRange(-2, 2);
-        this.npcs.push(new NPC(i, laneY));
-      }
+    computeSeed() {
+      return (this.championship.heat.seed ^ this.championship.difficulty.seedSalt) >>> 0;
     }
 
-    resetRun() {
-      // Started from a Space/Enter press or touch context-button gesture.
-      this.audio.ensureContext();
-      this.input.reset();
-      this.state = GAME_STATES.playing;
-      this.previousState = GAME_STATES.playing;
+    npcLaneY(index) {
+      const laneIndex = index % this.laneYs.length;
+      const laneGroup = Math.floor(index / this.laneYs.length);
+      const laneOffset = laneGroup === 0 ? -6 : 6;
+      return this.laneYs[laneIndex] + laneOffset;
+    }
+
+    createOrResetNpcs() {
+      const speedScale = this.championship.difficulty.npcSpeedScale * this.championship.heat.npcSpeedScale;
+      if (!this.npcs.length) {
+        for (let index = 0; index < CONFIG.npcCount; index += 1) {
+          this.npcs.push(new NPC(index, this.npcLaneY(index), this.rng, speedScale));
+        }
+        return;
+      }
+      this.npcs.forEach((npc, index) => {
+        npc.reset(this.npcLaneY(index), this.rng, speedScale);
+      });
+    }
+
+    prepareHeat(playAudio) {
+      const heat = this.championship.heat;
+      const difficulty = this.championship.difficulty;
+      this.currentSeed = this.computeSeed();
+      this.rng = new SeededRng(this.currentSeed);
+      this.heatTimeLimit = Math.max(40, heat.timeLimit + difficulty.timeOffset);
+      this.timeRemaining = this.heatTimeLimit;
+      this.elapsedTime = 0;
       this.failureReason = null;
       this.fx = null;
-      this.timeRemaining = CONFIG.timeLimit;
-      this.elapsedTime = 0;
-      this.player.reset();
-      this.light.reset();
-      this.npcs.forEach((npc, index) => {
-        const npcLaneCount = this.laneYs.length - 1;
-        const laneGroup = Math.floor(index / npcLaneCount);
-        const laneOffset = [-8, 8, 0][laneGroup] || 0;
-        const laneY = this.laneYs[index % npcLaneCount] + laneOffset + randRange(-2, 2);
-        npc.reset(laneY);
-      });
-      this.announce('Run started. Green light.');
+      this.heatEnded = false;
+      this.player.reset(this.laneYs);
+      this.score.reset(heat);
+      this.gates.reset(heat, difficulty);
+      this.createOrResetNpcs();
+      if (!playAudio) this.audio.stopSong();
+      this.light.reset(difficulty, heat, this.rng, playAudio);
+      this.syncQaState();
+    }
+
+    selectDifficulty(difficultyId) {
+      if (this.state !== GAME_STATES.title || !DIFFICULTIES[difficultyId]) return;
+      this.selectedDifficultyId = difficultyId;
+      this.championship.difficultyId = difficultyId;
+      this.championship.heatIndex = 0;
+      this.championship.results = [];
+      this.store.selectDifficulty(difficultyId);
+      this.prepareHeat(false);
+      this.ui.render();
+      this.announce(`${DIFFICULTIES[difficultyId].label} selected.`);
+    }
+
+    startChampionship(difficultyId = this.selectedDifficultyId) {
+      this.selectedDifficultyId = DIFFICULTIES[difficultyId] ? difficultyId : 'standard';
+      this.championship.start(this.selectedDifficultyId);
+      this.prepareHeat(false);
+      this.state = GAME_STATES.heatBriefing;
+      this.input.reset();
+      this.ui.render();
+      this.announce(`Heat 1. ${this.championship.heat.title}. ${this.championship.heat.objective}`);
+      return true;
+    }
+
+    beginHeat() {
+      if (this.state !== GAME_STATES.heatBriefing) return false;
+      this.audio.ensureContext();
+      this.input.reset();
+      this.prepareHeat(true);
+      this.state = GAME_STATES.playing;
+      this.ui.render();
+      this.announce(`Heat ${this.championship.heat.number} started. Green light.`);
+      return true;
     }
 
     startFromUserGesture() {
-      if (this.state === GAME_STATES.playing || this.state === GAME_STATES.paused) return false;
-      this.resetRun();
+      if (this.state === GAME_STATES.title) return this.startChampionship();
+      if (this.state === GAME_STATES.heatBriefing) return this.beginHeat();
+      if (this.state === GAME_STATES.heatResults) return this.advanceFromHeatResults();
+      if (this.state === GAME_STATES.championshipResults) return this.startChampionship();
+      if (this.state === GAME_STATES.paused) {
+        this.togglePause();
+        return true;
+      }
+      return false;
+    }
+
+    returnToTitle() {
+      this.audio.stopSong();
+      this.input.reset();
+      this.state = GAME_STATES.title;
+      this.failureReason = null;
+      this.fx = null;
+      this.championship.difficultyId = this.selectedDifficultyId;
+      this.championship.heatIndex = 0;
+      this.championship.results = [];
+      this.prepareHeat(false);
+      this.ui.render();
+      this.announce('Returned to the Momentum Protocol title screen.');
+    }
+
+    togglePause() {
+      if (this.state === GAME_STATES.playing) {
+        this.state = GAME_STATES.paused;
+        this.audio.pauseSong();
+        this.input.reset();
+        this.ui.render();
+        this.announce('Paused.');
+      } else if (this.state === GAME_STATES.paused) {
+        this.state = GAME_STATES.playing;
+        if (this.light.state !== LIGHT_STATES.red) this.audio.resumeSong();
+        this.input.reset();
+        this.ui.render();
+        this.announce(`${PHASE_LABELS[this.light.state]}.`);
+      }
+    }
+
+    advanceFromHeatResults() {
+      if (this.state !== GAME_STATES.heatResults) return false;
+      if (this.championship.isLastHeat) {
+        this.championship.finish();
+        this.state = GAME_STATES.championshipResults;
+        this.ui.render();
+        this.announce(`Championship complete. ${this.championship.medal === 'none' ? 'No medal' : this.championship.medal + ' medal'}. ${this.championship.finalScore} points.`);
+        return true;
+      }
+      this.championship.advance();
+      this.prepareHeat(false);
+      this.state = GAME_STATES.heatBriefing;
+      this.ui.render();
+      this.announce(`Heat ${this.championship.heat.number}. ${this.championship.heat.title}.`);
       return true;
     }
 
@@ -2699,7 +3793,6 @@
 
       this.handleGlobalInput();
       this.update(dt);
-      // Advance the win/lose effect even after the sim stops (state != playing).
       if (this.fx) this.fx.t += dt;
       this.syncQaState();
       this.renderer.render(this);
@@ -2710,22 +3803,18 @@
 
     handleGlobalInput() {
       const startPressed = this.input.wasPressed('Space') || this.input.wasPressed('Enter');
-      if (startPressed && this.state !== GAME_STATES.playing && this.state !== GAME_STATES.paused) {
-        this.startFromUserGesture();
+      if (startPressed && this.state !== GAME_STATES.playing) this.startFromUserGesture();
+
+      if (this.state === GAME_STATES.title) {
+        if (this.input.wasPressed('Digit1')) this.selectDifficulty('standard');
+        if (this.input.wasPressed('Digit2')) this.selectDifficulty('advanced');
+        if (this.input.wasPressed('Digit3')) this.selectDifficulty('elite');
       }
 
-      if (this.input.wasPressed('KeyP')) {
-        if (this.state === GAME_STATES.playing) {
-          this.state = GAME_STATES.paused;
-          this.previousState = GAME_STATES.playing;
-          this.audio.pauseSong();
-          this.announce('Paused.');
-        } else if (this.state === GAME_STATES.paused) {
-          this.state = GAME_STATES.playing;
-          // Only the doll's silence belongs to red - resume the chant otherwise.
-          if (this.light.state !== LIGHT_STATES.red) this.audio.resumeSong();
-          this.announce(`${PHASE_LABELS[this.light.state]}.`);
-        }
+      if (this.input.wasPressed('KeyP')) this.togglePause();
+
+      if (this.input.wasPressed('Escape') && this.state !== GAME_STATES.playing && this.state !== GAME_STATES.title) {
+        this.returnToTitle();
       }
 
       if (this.input.wasPressed('KeyM')) {
@@ -2744,6 +3833,14 @@
       }
     }
 
+    onLightStateChanged(previousState, nextState) {
+      if (nextState === LIGHT_STATES.red) {
+        this.score.recordRedStart(Math.hypot(this.player.vx, this.player.vy));
+      } else if (previousState === LIGHT_STATES.red && nextState === LIGHT_STATES.green) {
+        this.score.recordSafeRed();
+      }
+    }
+
     update(dt) {
       this.debug.update(dt);
       if (this.state !== GAME_STATES.playing) return;
@@ -2753,51 +3850,65 @@
       this.light.update(dt, this);
 
       for (const npc of this.npcs) {
-        npc.update(dt, this.light.state, this.light.elapsed, this.elapsedTime);
+        npc.update(dt, this.light.state, this.light.elapsed, this.elapsedTime, this.rng);
       }
 
-      this.player.update(dt, this.input, this.light.state, this.elapsedTime);
+      this.player.update(dt, this.input, this.light.state, this.elapsedTime, this.laneYs);
+      this.gates.update(this);
 
       if (this.light.state === LIGHT_STATES.red && this.player.redDrift > CONFIG.redMovementTolerance) {
-        this.lose(FAILURE_REASONS.caughtMoving);
+        this.endHeat(false, FAILURE_REASONS.caughtMoving);
         return;
       }
 
       if (this.player.state === ENTITY_STATES.finished) {
-        this.win();
+        this.endHeat(true, null);
         return;
       }
 
-      if (this.timeRemaining <= 0) {
-        this.lose(FAILURE_REASONS.timeout);
-      }
+      if (this.timeRemaining <= 0) this.endHeat(false, FAILURE_REASONS.timeout);
     }
 
-    win() {
-      this.state = GAME_STATES.won;
-      this.player.finish(this.elapsedTime);
+    endHeat(completed, failureReason) {
+      if (this.heatEnded) return;
+      this.heatEnded = true;
+      this.failureReason = failureReason;
       this.audio.stopSong();
-      this.fx = { type: 'win', t: 0 };
-      this.audio.winSting();
-      this.announce('Finished. You survived.');
-    }
 
-    lose(reason) {
-      this.state = GAME_STATES.lost;
-      this.failureReason = reason;
-      this.audio.stopSong();
-      if (reason === FAILURE_REASONS.caughtMoving) {
+      if (completed) {
+        this.player.finish(this.elapsedTime);
+        this.fx = { type: 'win', t: 0 };
+        this.audio.winSting();
+      } else if (failureReason === FAILURE_REASONS.caughtMoving) {
         this.player.eliminate(this.elapsedTime);
         this.fx = { type: 'caught', t: 0 };
         this.audio.loseSting('caught');
-        this.announce('Caught moving. Eliminated.');
       } else {
         this.player.state = ENTITY_STATES.idle;
         this.player.vx = 0;
+        this.player.vy = 0;
         this.fx = { type: 'timeout', t: 0 };
         this.audio.loseSting('timeout');
-        this.announce("Time's up. Run failed.");
       }
+
+      const result = this.score.finalize(this, completed, failureReason);
+      this.championship.addResult(result);
+      this.state = GAME_STATES.heatResults;
+      this.input.reset();
+      this.ui.render();
+      this.announce(completed
+        ? `Heat complete. ${result.score} points.`
+        : `Heat failed, but the championship continues. ${result.score} points.`);
+    }
+
+    liveHeatScore() {
+      if (this.state !== GAME_STATES.playing) return 0;
+      const progress = clamp((this.player.x - CONFIG.startX) / (CONFIG.finishX - CONFIG.startX), 0, 1);
+      return clamp(Math.round(
+        progress * 1000
+        + this.score.gateRawScore
+        + (this.score.perfectStops * 250 + this.score.safeStops * 100) * progress
+      ), 0, SCORE_RULES.maxHeatScore);
     }
 
     countNpcs(kind) {
@@ -2814,15 +3925,29 @@
     }
 
     syncQaState() {
+      if (!this.canvas) return;
       this.canvas.dataset.gameState = this.state;
       this.canvas.dataset.lightState = this.light.state;
+      this.canvas.dataset.difficulty = this.championship.difficultyId;
+      this.canvas.dataset.heat = String(this.championship.heatIndex + 1);
+      this.canvas.dataset.seed = String(this.currentSeed >>> 0);
+      this.canvas.dataset.score = String(this.championship.totalScore + this.liveHeatScore());
+      this.canvas.dataset.gateChain = String(this.score.gateChain);
+      this.canvas.dataset.gateMultiplier = this.score.currentMultiplier().toFixed(2);
       this.canvas.dataset.timeRemaining = this.timeRemaining.toFixed(2);
       this.canvas.dataset.playerX = this.player.x.toFixed(2);
+      this.canvas.dataset.playerY = this.player.y.toFixed(2);
+      this.canvas.dataset.playerVx = this.player.vx.toFixed(2);
+      this.canvas.dataset.playerVy = this.player.vy.toFixed(2);
+      this.canvas.dataset.playerLane = String(this.player.currentLane + 1);
+      this.canvas.dataset.targetLane = String(this.player.targetLane + 1);
+      this.canvas.dataset.redDrift = this.player.redDrift.toFixed(2);
       this.canvas.dataset.playerState = this.player.state;
       this.canvas.dataset.npcAlive = String(this.countNpcs('alive'));
       this.canvas.dataset.npcEliminated = String(this.countNpcs('eliminated'));
       this.canvas.dataset.npcFinished = String(this.countNpcs('finished'));
       this.canvas.dataset.failureReason = this.failureReason || '';
+      this.canvas.dataset.storage = this.store.available ? 'local' : 'session';
       this.canvas.dataset.debug = this.debug.enabled ? 'on' : 'off';
     }
 
@@ -2838,14 +3963,16 @@
   try {
     const canvas = document.getElementById('gameCanvas');
     const statusNode = document.getElementById('screenReaderStatus');
-    const game = new Game(canvas, statusNode);
+    const overlay = document.getElementById('menuOverlay');
+    const panel = document.getElementById('menuPanel');
+    const touchControls = document.getElementById('touchControls');
+    const game = new Game(canvas, statusNode, overlay, panel, touchControls);
 
     window.__RLG_GAME__ = game;
 
     /* -----------------------------------------------------------------------
        Touch controls wiring. Isolated from gameplay logic: it only injects
-       virtual keys into the existing InputManager and reads game.state to
-       toggle the context button. No game logic is mutated here.
+       virtual keys into the existing InputManager. No game logic is mutated here.
     ----------------------------------------------------------------------- */
     (function setupTouchControls() {
       const root = document.getElementById('touchControls');
@@ -2865,13 +3992,16 @@
 
       const input = game.input;
       const holdButtons = Array.from(root.querySelectorAll('[data-hold]'));
-      const contextBtn = document.getElementById('contextBtn');
+      const laneButtons = Array.from(root.querySelectorAll('[data-lane]'));
       const activeHolds = new Set();
 
       function releaseAll() {
         activeHolds.clear();
         input.releaseVirtual('ArrowRight');
+        input.releaseVirtual('ArrowUp');
+        input.releaseVirtual('ArrowDown');
         holdButtons.forEach((btn) => btn.classList.remove('is-active'));
+        laneButtons.forEach((btn) => btn.classList.remove('is-active'));
       }
 
       function syncHoldState() {
@@ -2905,18 +4035,24 @@
         btn.addEventListener('lostpointercapture', endHold);
       });
 
-      if (contextBtn) {
-        contextBtn.addEventListener('pointerdown', (event) => {
+      laneButtons.forEach((btn) => {
+        const code = btn.dataset.lane === 'up' ? 'ArrowUp' : 'ArrowDown';
+        btn.addEventListener('pointerdown', (event) => {
           event.preventDefault();
-          // iOS home-screen web apps require media playback to begin inside the
-          // same trusted touch gesture. Starting synchronously here keeps the
-          // existing game start path but avoids deferring song.play() to rAF.
-          if (!game.startFromUserGesture()) input.pressVirtual('Space');
+          if (typeof btn.setPointerCapture === 'function') {
+            try { btn.setPointerCapture(event.pointerId); } catch (_) {}
+          }
+          btn.classList.add('is-active');
+          input.pressVirtual(code);
         });
-        const releaseContext = () => input.releaseVirtual('Space');
-        contextBtn.addEventListener('pointerup', releaseContext);
-        contextBtn.addEventListener('pointercancel', releaseContext);
-      }
+        const releaseLane = () => {
+          btn.classList.remove('is-active');
+          input.releaseVirtual(code);
+        };
+        btn.addEventListener('pointerup', releaseLane);
+        btn.addEventListener('pointercancel', releaseLane);
+        btn.addEventListener('lostpointercapture', releaseLane);
+      });
 
       // Never let movement stick if focus or visibility is lost mid-hold.
       window.addEventListener('blur', releaseAll);
@@ -2924,27 +4060,6 @@
         if (document.hidden) releaseAll();
       });
 
-      // Reflect game state onto the control layer so the context button hides
-      // during play and updates its label otherwise.
-      let lastState = null;
-      (function syncUi() {
-        const state = game.state;
-        if (state !== lastState) {
-          lastState = state;
-          const playing = state === 'playing' || state === 'paused';
-          if (playing) {
-            root.setAttribute('data-playing', '');
-          } else {
-            root.removeAttribute('data-playing');
-            if (contextBtn) {
-              const label = (state === 'won' || state === 'lost') ? 'Restart' : 'Start';
-              contextBtn.textContent = label;
-              contextBtn.setAttribute('aria-label', label + ' run');
-            }
-          }
-        }
-        requestAnimationFrame(syncUi);
-      })();
     })();
   } catch (error) {
     window.__RLG_BOOT_ERROR__ = {
