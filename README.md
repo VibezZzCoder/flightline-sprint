@@ -2,6 +2,9 @@
 
 A complete three-heat arcade Red Light / Green Light championship in one self-contained, offline Canvas 2D file. It uses fictionalized, stylized, USAF-inspired training-field visuals and requires no installation or network connection.
 
+Play the game at https://vibezzzcoder.github.io/flightline-sprint 
+(or simply download a copy and play it locally offline)
+
 ## Screenshot
 
 ![Flightline Sprint gameplay in a mobile landscape viewport](docs/screenshots/flightline-sprint-mobile-landscape.png)
