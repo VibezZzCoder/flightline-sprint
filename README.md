@@ -7,7 +7,7 @@ Play the game at https://vibezzzcoder.github.io/flightline-sprint
 
 ## Screenshot
 
-![Flightline Sprint gameplay in a mobile landscape viewport](docs/screenshots/flightline-sprint-mobile-landscape.png)
+![Flightline Sprint gameplay in a mobile landscape viewport](flightline-sprint-mobile-landscape.png)
 
 ## Championship
 
@@ -65,10 +65,6 @@ Menus use normal buttons and can be navigated with the keyboard.
 ## Records And Privacy
 
 Records are stored locally and separately for Standard, Advanced, and Elite. If browser storage is unavailable or blocked, the game safely keeps records for the current session only. There are no accounts, analytics, network leaderboards, or online services.
-
-## Project Status
-
-`Momentum Protocol` is the current full-game mode. The exact source and playable release artifact is `flightline-sprint.html`; there is no separate build output.
 
 ## License
 
