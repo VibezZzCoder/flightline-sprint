@@ -1,71 +1,74 @@
-# Flightline Sprint: Momentum Protocol
+# Flightline Sprint: Freeze Drill
 
-A complete three-heat arcade Red Light / Green Light championship in one self-contained, offline Canvas 2D file. It uses fictionalized, stylized, USAF-inspired training-field visuals and requires no installation or network connection.
+Run on the chant. Freeze when they turn. Drop when you don't.
 
-Play the game at https://vibezzzcoder.github.io/flightline-sprint 
-(or simply download a copy and play it locally offline)
+A behind-the-runner sprint down a training track toward a watchtower. While the Proctor faces away and the Korean
+children's chant plays, you run. When the chant ends the Proctor turns around. Anyone still moving gets the spotlight,
+a whistle and "DROP! GIVE ME FIVE!", then push-ups. The faster you run, the longer you slide, so the skill is
+stopping late, fast and clean.
+
+The art is all drawn in code and the music is composed in code. The whole game is one self-contained, offline HTML
+file with no installs and no network requests.
+
+Play it at https://vibezzzcoder.github.io/flightline-sprint
+
+You can also download `index.html` from this repository and open it in a browser. It works offline, with no install
+and no network connection.
 
 ## Screenshot
 
-![Flightline Sprint gameplay in a mobile landscape viewport](flightline-sprint-mobile-landscape.png)
+![Flightline Sprint: Freeze Drill gameplay in a mobile landscape viewport](flightline-sprint-mobile-landscape.png)
 
-## Championship
+## How to play
 
-Every championship runs through all three heats:
+- **Hold to run, let go to brake.** Your momentum carries you, so let go before the chant ends. The last syllables
+  and the 10-pip chant bar tell you when it will end, and the chant's pitch tells you its speed.
+- **Freeze while you are watched.** The light state always shows four ways: the Proctor's pose, the screen frame
+  (scrolling chevrons for go, a static hatch for freeze, a gold frame for the final sprint), the pip bar, and the
+  State Badge word (RUN, READY, FREEZE, JOG, HIDDEN, GO GO GO). You do not need colour or sound to read it.
+- **Caught?** You hold a plank until the Proctor turns back, then do five push-ups (tapping in time is optional).
+  You lose a strike and take a 3-second PAPERWORK penalty. The first catch by each new trick is a warning, and
+  S01 catches are practice. Run out of strikes and you are dismissed. Retry is one tap.
+- **Use cover.** Crates, tugs, canopies and other runners can block the Proctor's view. While HIDDEN you can creep
+  forward.
+- **Style.** Stopping just in time at high speed earns CLUTCH and RAZOR. These fill NERVE, and NERVE pays for an
+  OVERDRIVE speed burst.
 
-1. **Brake Check** teaches acceleration, coasting, and precise stops.
-2. **Signal Run** adds fixed-target route gates and score chains: green is Perfect, either amber neighbor is Good.
-3. **Final Protocol** combines tighter signals, more gates, faster rivals, placement scoring, and braking precision.
+### Controls
 
-A caught or timed-out heat still awards limited progress points and advances to the next heat. The maximum championship score is 30,000. Bronze starts at 12,000, Silver at 20,000, and Gold requires 25,000 plus completion of all three heats.
+| Action | Keyboard | Mouse | Touch |
+|---|---|---|---|
+| Run (hold) / brake (release) | W, Up or Space | hold the left button | hold a thumb in the bottom Run Zone |
+| Change lane | A / D or Left / Right | drag sideways while holding | slide the finger sideways (or swipe with a second finger) |
+| Jump | Shift, J or K | flick up | flick up |
+| Overdrive (NERVE 50 or more) | E | OVERDRIVE button | OVERDRIVE button |
+| Push-up rep | any run key | click | tap |
+| Pause / mute | Esc or P / M | pause button | pause button |
 
-## Features
+It plays on desktop and on phones in portrait and landscape. Sound starts on the first tap. Settings has
+tap-to-toggle run, a left-handed layout, the lane-slide threshold, music, SFX and chant volume, reduced motion,
+high contrast, captions, quality and an audio-offset calibration.
 
-- Momentum-based acceleration, coasting, and predictable braking
-- Discrete movement across all six lanes, with lateral motion counted during Red
-- Standard, Advanced, and Elite available immediately
-- Fixed per-difficulty, per-heat seeds for repeatable record attempts
-- Pre-announced route gates with fixed green target lanes, amber Good lanes, Perfect/Good/miss feedback, chains, and multipliers
-- Original embedded title-screen key art with a responsive accessible menu layer
-- Per-difficulty championship, medal, heat, time, and gate-chain records
-- Twelve non-colliding visual rivals with deterministic behavior
-- Keyboard and mirrored multi-touch controls
-- Pause, mute, reduced-motion support, embedded-asset fallbacks, and debug diagnostics
-- Embedded visuals and audio with no external runtime requests
+## Modes
 
-## How To Play Locally
-
-Open `flightline-sprint.html` directly in a browser. No install, build step, local server, CDN, package manager, or external runtime dependency is required.
-
-## Keyboard Controls
-
-- `D` or `ArrowRight`: hold to accelerate; release to brake
-- `W` or `ArrowUp`: move up one lane
-- `S` or `ArrowDown`: move down one lane
-- `P`: pause or resume
-- `M`: toggle sound
-- `F1` or `` ` ``: toggle debug overlay
-
-Menus use normal buttons and can be navigated with the keyboard.
-
-## Touch Controls
-
-- Hold either bottom-corner `Hold ▶ Move` button to accelerate.
-- Use the adjacent `▲` and `▼` buttons to change one lane at a time.
-- Both mirrored control pods support multi-touch and either-thumb play.
-
-## Scoring
-
-- Green target lane: Perfect, 500 base points
-- Either adjacent amber lane: Good, 300 base points
-- Each successful consecutive bank adds `0.25×`, capped at `2×`
-- A miss resets the chain
-- Every heat is normalized to 10,000 points
-- Failed heats lose completion/time/placement bonuses and are capped at 3,500
+- **Campaign:** 12 stages across dawn track, midday apron, storm and night. Each stage brings in one watcher trick:
+  tempo changes, long stares, stutters, short chants, peeks, double-takes, searchlight sweeps and headcounts. Every
+  trick is signalled in advance. The campaign ends in a three-act finale, *Final Formation*, followed by an ending
+  and credits. Each stage has three stars: finish, beat the gold time, and the stage's special challenge.
+- **Long Haul:** an endless run. Difficulty rises in tiers, the environment rotates and new rivals join. It unlocks
+  after S03.
+- **Daily Drill:** the same seeded 320 m drill for everyone each day, with one modifier of the day. Your first finish
+  of the day is Official, and you can copy the result as text. It unlocks after S06.
+- **Locker:** play as an airman or an airwoman, with a choice of skin tones and hairstyles. Belts, headbands, shoes
+  and freeze poses are earned by playing.
+- **Difficulty:** Relaxed, Standard or Hard, with separate records for each. The game also has 16 achievements and
+  a stats page.
 
 ## Records And Privacy
 
-Records are stored locally and separately for Standard, Advanced, and Elite. If browser storage is unavailable or blocked, the game safely keeps records for the current session only. There are no accounts, analytics, network leaderboards, or online services.
+Progress, records and settings are kept only in this browser's local storage, and Settings has an export / import
+code. If storage is blocked, the game keeps progress for the current session only. There are no accounts, analytics,
+network leaderboards or online services.
 
 ## License
 
